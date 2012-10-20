@@ -325,7 +325,7 @@ function handleMarked(items) {
     //  console.log(response);
     //});
     //var message = JSON.stringify( localStorage.noted );
-    chrome.extension.sendMessage( localStorage.noted, function(response){
+    chrome.extension.sendMessage( localStorage.noted || 'delete', function(response){
       console.log(response);
     });
   }
@@ -333,8 +333,14 @@ function handleMarked(items) {
   var obj = document.getElementById('loadMessage');
   obj.onclick = function(){
     var message = 'load';
-    chrome.extension.sendMessage( message, function(response){
-      localStorage.noted = response;
+    chrome.extension.sendMessage( message, function(response){//该函数里面不用用alert阻塞语句
+      //setTimeout(function(){alert(response)},10);//通过设置一个延迟来解决该Error,在NOTE.localLoad()语句里面
+      if(response == 'clear'){
+        delete localStorage.noted;
+      }else{
+        localStorage.noted = response;
+      }
+      NOTE.localLoad();
     });
   }
 
@@ -521,22 +527,27 @@ HandleNoted.prototype = {
       delete localStorage.noted;
     }else{
       localStorage.noted = JSON.stringify( this.dumpItem() );
+      localStorage.notedurl = location.href ;
     }
   },
   localLoad: function(){
-    if(!localStorage.noted){
-      alert('没有可加载的note');
+    if(!localStorage.noted){//这里如果用alert会触发chrome插件的error,因为阻塞了sendMessage的response事件
+      //Error in event handler for 'undefined': Cannot call method 'disconnect' of null TypeError: Cannot call method 'disconnect' of null
+      setTimeout(function(){ //设置延时解决该bug
+        alert('没有可加载的note');
+      },10);
       return ;
-    }
-    this.recoverItem( JSON.parse(localStorage.noted) );
+    }else{
+      this.recoverItem( JSON.parse(localStorage.noted) );
     //this.notesSerial = JSON.parse( localStorage.noted );
     //this.recoverItem();
+    }
   }
 }
 
 var NOTE = new HandleNoted();
 
 //自动恢复
-if( localStorage.noted ){
+if( localStorage.noted && localStorage.notedurl == location.href ){
   NOTE.localLoad();  
 }

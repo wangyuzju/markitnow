@@ -3,7 +3,8 @@ function genURL(action){
 }
 var URL={
   'save': genURL('save'),
-  'load': genURL('load')
+  'load': genURL('load'),
+  'manage': genURL('manage')
 }
 
 chrome.browserAction.onClicked.addListener(function() {
@@ -47,12 +48,20 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
   var url = sender.tab.url;
   var value = request ;
-  if(value == 'load'){//加载服务器数据
-    xhrGet(URL.load+'?load='+encodeURIComponent(url), sendResponse );
-  }else{//请求服务器保存
-    xhrPost(URL.save, 'url='+encodeURIComponent(url)+'&marked='+value, function(xhr){
-      sendResponse({success:'true'});
-    });
+  switch (value){
+    case 'load'://加载服务器数据
+      xhrGet(URL.load+'?load='+encodeURIComponent(url), sendResponse );
+      break;
+    case 'delete'://请求服务器保存删除记录
+      xhrPost(URL.save, 'url='+encodeURIComponent(url), function(xhr){
+        sendResponse({success:'true'});
+      });
+      break;
+    default: //请求服务器保存添加记录
+      xhrPost(URL.save, 'url='+encodeURIComponent(url)+'&marked='+value, function(xhr){
+        sendResponse({success:'true'});
+      });
+      break;
   }
   return true;//想要将sendResponse传递给ajax处理函数处理ajax接收到的请求时(异步)，这里必须要返回ture
 });//}}}
