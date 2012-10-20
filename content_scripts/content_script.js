@@ -46,7 +46,7 @@ function add(){
     highlight(range);
   };
   
-  downselect(document.getElementById('ds').id,['北京','上海','广州']);
+  downselect(document.getElementById('ds'),['#08c','red','#1000CC']);
 
   document.getElementById('showMessage').onclick = function(){
     delete localStorage.marked;
@@ -110,9 +110,10 @@ function add(){
 
 
 //给input元素设置下拉菜单
-function downselect(id,choices){
-  var obj = document.getElementById(id);
-  
+function downselect(obj,choices){
+  //var obj = document.getElementById(id);
+  var id = obj.id;
+
   var objbt = document.createElement('div');
   objbt.id = id+'bt' ;
   objbt.className = 'showAll';
@@ -120,9 +121,10 @@ function downselect(id,choices){
   
   var objchoices = document.createElement('ul');
   objchoices.id = id+'choices';
-  var str = '<li>';
-  str += choices.join('</li><li>');
-  str += '</li>';
+  var str = '';
+  for(var i = 0 , l = choices.length ; i < l ; i++ ){
+    str+= '<li style="background:'+choices[i]+'"></li>'
+  }
   objchoices.innerHTML = str ;
   obj.parentNode.appendChild(objchoices);
 
@@ -131,16 +133,17 @@ function downselect(id,choices){
   objchoices.style.width = obj.clientWidth + 'px' ;
   objchoices.style.left = obj.offsetLeft + 'px' ;
 
-  var displayChange = toggle( objchoices.style , 'display' , 'none' , '' );
+  //TODO
+  displayChange = toggle( objchoices.style , 'display' , 'none' , '' );
   objbt.onclick = function(){
     displayChange();
   }
   
-  //按钮 id+'bt' ; 选项列表 id+'choices'
-  objchoices.onclick = function(e){
-    obj.value = e.target.innerHTML;
-    displayChange();
-  }
+  ////按钮 id+'bt' ; 选项列表 id+'choices'
+  //objchoices.onclick = function(e){
+  //  obj.value = e.target.innerHTML;
+  //  displayChange();
+  //}
 }
 
 //toggle
@@ -399,7 +402,7 @@ EditInPlaceField.prototype = {
     //this.convertToText();
   },
   attachEvents: function() {
-    drag( this.containerElement );  
+    drag( this.containerElement );
     var that = this;
     //this.staticElement.onclick = function() { that.convertToEditable() } ;
     //this.saveButton.onclick = function() { that.save() } ;
@@ -408,6 +411,22 @@ EditInPlaceField.prototype = {
     this.closeButton.onmouseover = function() { that.closeButton.style.opacity = '1'; } ;
     this.closeButton.onmouseout = function() { that.closeButton.style.opacity = '0'; } ;
     this.closeButton.onmousedown = function() { NOTE.removeItem(that); } ;
+    this.fieldElement.onclick = function(){ 
+      var obj = $('__select__');
+      obj.parentElement.removeChild(obj);
+      console.log(obj);
+      that.containerElement.appendChild(obj); 
+      
+      $('dschoices').onclick = function(e){
+        console.log(that.containerElement.style.boxShowdow);
+        that.containerElement.style.boxShadow = '0 0 9px '+e.target.style.background ;
+        displayChange();
+      }
+      //objchoices.onclick = function(e){
+      //  obj.value = e.target.innerHTML;
+      //  displayChange();
+      //}
+    }
   },
   
   convertToEditable: function() {
