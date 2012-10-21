@@ -17,7 +17,7 @@ function add(){
 
   var body = document.createElement('div');
   body.id = '__body__' ;
-  body.innerHTML = '<div id="__select__"><input id="ds" class="__input__" type=text ></div><div class="__sep__"></div>'
+  body.innerHTML = '<div class="__sep__"></div>'
     +'<div class="bt __green__" id="highlight">高亮</div>'
     +'<br><br><div class="bt __green__" id="recover">恢复</div>'
     +'<br><br><div class="bt __green__" id="showMessage">清除</div>'
@@ -48,7 +48,6 @@ function add(){
     highlight(range);
   };
   
-  downselect(document.getElementById('ds'),['#08c','red','#1000CC']);
 
   document.getElementById('showMessage').onclick = function(){
     delete localStorage.marked;
@@ -136,7 +135,7 @@ function downselect(obj,choices){
   objchoices.style.left = obj.offsetLeft + 'px' ;
 
   //TODO
-  displayChange = toggle( objchoices.style , 'display' , 'none' , '' );
+  displayChange = toggle( objchoices.style , 'display' , 'none' , 'block' );
   objbt.onclick = function(){
     displayChange();
   }
@@ -416,14 +415,14 @@ EditInPlaceField.prototype = {
     //关闭按钮
     this.closeButton.onmouseover = function() { that.closeButton.style.opacity = '1'; } ;
     this.closeButton.onmouseout = function() { that.closeButton.style.opacity = '0'; } ;
-    this.closeButton.onmousedown = function() { NOTE.removeItem(that); } ;
+    this.closeButton.onmousedown = function() {  
+      NOTE.saveToolbar();
+      NOTE.removeItem(that); } ;
     this.fieldElement.onclick = function(){ 
-      var obj = $('__select__');
-      obj.parentElement.removeChild(obj);
+      var obj = NOTE.getToolbar() ;
       that.containerElement.appendChild(obj); 
       
       $('dschoices').onclick = function(e){
-        console.log(that.containerElement.style.boxShowdow);
         that.containerElement.style.boxShadow = '0 0 9px '+e.target.style.background ;
         displayChange();
       }
@@ -514,9 +513,27 @@ function HandleNoted(){
   this.notes = {};
   //this.notesSerial = {};  //这个全局变量导致读和写公用，直接导致bug,其实是无需的
   this.i = 0 ;
+
+ //原型 '<div id="__select__"><input id="ds" class="__input__" type=text ></div>';
+  this.toolbar = document.createElement('div');
+  this.toolbar.id = '__select__';
+  var s = document.createElement('input');
+  s.id = 'ds';
+  s.className = '__input__';
+  s.type = 'text';
+  this.toolbar.appendChild(s);
+
+  downselect( s,['#08c','red','#1000CC']);
 }
 
 HandleNoted.prototype = {
+  saveToolbar: function(){
+    this.toolbar.parentElement.removeChild(this.toolbar);
+  },
+  getToolbar: function(){
+    return this.toolbar ;
+  }
+  ,
   newItem: function(){
     this.notes[this.i] = new EditInPlaceField(this.i, 
       document.body, new Date(), {top:window.scrollY+'px',left:'0px'});

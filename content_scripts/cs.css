@@ -81,6 +81,7 @@
 }
 #__select__ li {
   padding: 8px 0;
+  width:60px;
   background: #D9E8E8;
   cursor: pointer;
 }
