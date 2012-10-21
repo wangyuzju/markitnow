@@ -343,6 +343,7 @@ function handleMarked(items) {
       }else{
         localStorage.noted = response;
       }
+      NOTE.reset();
       NOTE.localLoad();
     });
   }
@@ -418,7 +419,6 @@ EditInPlaceField.prototype = {
     this.fieldElement.onclick = function(){ 
       var obj = $('__select__');
       obj.parentElement.removeChild(obj);
-      console.log(obj);
       that.containerElement.appendChild(obj); 
       
       $('dschoices').onclick = function(e){
@@ -479,7 +479,10 @@ EditInPlaceField.prototype = {
       }
     }
   },
-
+  removeSelf: function(){
+    var obj = this.containerElement;
+    obj.parentElement.removeChild(obj);
+  },
   setValue: function(value) {
     this.fieldElement.value = value;
     this.staticElement.innerHTML = value;
@@ -508,7 +511,7 @@ $('loadNote').onclick = function(){
 function HandleNoted(){
   //var notes = {};//私有属性，只能通过this.method函数来访问，详见js设计模式p32
   this.notes = {};
-  this.notesSerial = {};  //这个全局变量导致读和写公用，直接导致bug,其实是无需的
+  //this.notesSerial = {};  //这个全局变量导致读和写公用，直接导致bug,其实是无需的
   this.i = 0 ;
 }
 
@@ -526,8 +529,15 @@ HandleNoted.prototype = {
       this.notes[j].id = j ; 
     }
     delete this.notes[i]; 
-    console.log(this);
     document.body.removeChild(obj.containerElement);
+  },
+  reset: function(){
+    for(var i = 0 , l = this.i ; i < l ; i++ ){
+      this.notes[i].removeSelf();
+      console.log('removed');
+    }
+    this.notes = {};
+    this.i = 0 ;
   },
   echoItem:function(){
     console.log(this.notes);
