@@ -528,7 +528,9 @@ function HandleNoted(){
 
 HandleNoted.prototype = {
   saveToolbar: function(){
-    this.toolbar.parentElement.removeChild(this.toolbar);
+    if( this.toolbar.parentElement ){
+      this.toolbar.parentElement.removeChild(this.toolbar);
+    }
   },
   getToolbar: function(){
     return this.toolbar ;
