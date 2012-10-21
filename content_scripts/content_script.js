@@ -352,12 +352,13 @@ function handleMarked(items) {
  */
 /* EditInPlaceField class. */
 
-function EditInPlaceField(id, parent, value, position, area) {
+function EditInPlaceField(id, parent, value, position, area, appearance) {
   this.id = id; //保存的时候使用
   this.value = value || 'default value';
   this.parentElement = parent;
   this.position = position || {top:'0px',left:'0px'} ;
   this.area = area || {width:'160px', height:'60px'} ;
+  this.appearance = appearance ;
   this.createElements(this.id);
   //注册组件相关的各种事件
   this.attachEvents();
@@ -370,6 +371,9 @@ EditInPlaceField.prototype = {
     this.containerElement.className = '__note__';
     this.containerElement.style.top = this.position.top ;
     this.containerElement.style.left = this.position.left ;
+    if(this.appearance && (this.appearance.boxShadow != '')){
+      this.containerElement.style.boxShadow = this.appearance.boxShadow ;
+    }
     this.parentElement.appendChild(this.containerElement);
 
     //this.staticElement = document.createElement('span');
@@ -469,6 +473,9 @@ EditInPlaceField.prototype = {
       area: {
         width: obj.style.width,
         height: obj.style.height
+      },
+      appearance: {
+        boxShadow: this.containerElement.style.boxShadow 
       }
     }
   },
@@ -537,7 +544,7 @@ HandleNoted.prototype = {
   recoverItem: function(obj){
     for(var i = 0,l = obj.total; i < l ; i++ ){
       this.notes[i] = new EditInPlaceField( i,
-        document.body, obj[i].value, obj[i].position, obj[i].area);
+        document.body, obj[i].value, obj[i].position, obj[i].area, obj[i].appearance);
     }
     this.i = l ; //对应上面
   },
@@ -570,3 +577,23 @@ var NOTE = new HandleNoted();
 if( localStorage.noted && localStorage.notedurl == location.href ){
   NOTE.localLoad();  
 }
+
+
+/***
+ *动态设置css：因为涉及到chrome.extension.getURL()的读取
+ *
+ */
+var resource = chrome.extension.getURL('content_scripts/') ;
+
+function loadStyleString(css){
+  var style = document.createElement('style');
+  style.type = 'text/css' ;
+  style.appendChild(document.createTextNode(css));
+  var head = document.getElementsByTagName("head")[0] ;
+  head.appendChild(style);
+}
+
+loadStyleString('#__head-right__ { background: url('+resource+'sprite.gif) 0 -56px } '
+               +'.__note-close__ {background: url('+resource+'sprite.png) 0 298px } '
+               +'.showAll {background: url('+resource+'sprite.gif) 0 -558px} '
+               );

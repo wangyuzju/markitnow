@@ -29,7 +29,6 @@
   width: 18px;
   height: 20px;
   float: right;
-  background: url(chrome-extension://gchfjnmgklpmeehneajfmnmkblofddjf/content_scripts/sprite.gif) 0 -56px;
 }
 
 .__note__ {
@@ -56,7 +55,6 @@
   position: relative;
   width: 38px;
   height: 18px;
-  background: url(chrome-extension://gchfjnmgklpmeehneajfmnmkblofddjf/content_scripts/sprite.png) 0px 298px;
 }
 /**************************************下拉框***************************************/
 .__input__ {
@@ -69,7 +67,6 @@
 
 .showAll {
   display: inline-block;
-  background:url(chrome-extension://gchfjnmgklpmeehneajfmnmkblofddjf/content_scripts/sprite.gif) 0 -558px no-repeat;
   width:22px;
   height: 18px;
   cursor: pointer;
