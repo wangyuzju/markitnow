@@ -1,3 +1,5 @@
+var PAGEURL = location.href ;
+
 function $(id){ return document.getElementById(id); }
 
 function add(){
@@ -327,8 +329,7 @@ function handleMarked(items) {
     //chrome.extension.sendMessage( message, function(response){
     //  console.log(response);
     //});
-    //var message = JSON.stringify( localStorage.noted );
-    chrome.extension.sendMessage( localStorage.noted || 'delete', function(response){
+    chrome.extension.sendMessage( localStorage[PAGEURL] || 'delete', function(response){
       console.log(response);
     });
   }
@@ -339,9 +340,9 @@ function handleMarked(items) {
     chrome.extension.sendMessage( message, function(response){//该函数里面不用用alert阻塞语句
       //setTimeout(function(){alert(response)},10);//通过设置一个延迟来解决该Error,在NOTE.localLoad()语句里面
       if(response == 'clear'){
-        delete localStorage.noted;
+        delete localStorage[PAGEURL];
       }else{
-        localStorage.noted = response;
+        localStorage[PAGEURL] = response;
       }
       NOTE.reset();
       NOTE.localLoad();
@@ -559,24 +560,22 @@ HandleNoted.prototype = {
     this.i = l ; //对应上面
   },
   localSave: function(){
-    if( this.i == 0 ){
-      delete localStorage.noted;
+    if( this.i === 0 ){//该语句在处理同域请求会出bug,比如子域没有设置，在从子域跳转到主域时，会清空主域下设置的key
+      //改变了key的设置方法，此bug不再存在
+      delete localStorage[PAGEURL];
     }else{
-      localStorage.noted = JSON.stringify( this.dumpItem() );
-      localStorage.notedurl = location.href ;
+      localStorage[PAGEURL] = JSON.stringify( this.dumpItem() );
     }
   },
   localLoad: function(){
-    if(!localStorage.noted){//这里如果用alert会触发chrome插件的error,因为阻塞了sendMessage的response事件
+    if(!localStorage[PAGEURL]){//这里如果用alert会触发chrome插件的error,因为阻塞了sendMessage的response事件
       //Error in event handler for 'undefined': Cannot call method 'disconnect' of null TypeError: Cannot call method 'disconnect' of null
       setTimeout(function(){ //设置延时解决该bug
         alert('没有可加载的note');
       },10);
       return ;
     }else{
-      this.recoverItem( JSON.parse(localStorage.noted) );
-    //this.notesSerial = JSON.parse( localStorage.noted );
-    //this.recoverItem();
+      this.recoverItem( JSON.parse(localStorage[PAGEURL]) );
     }
   }
 }
@@ -584,7 +583,7 @@ HandleNoted.prototype = {
 var NOTE = new HandleNoted();
 
 //自动恢复
-if( localStorage.noted && localStorage.notedurl == location.href ){
+if( localStorage[PAGEURL] ){
   NOTE.localLoad();  
 }
 
