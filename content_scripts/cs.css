@@ -1,4 +1,5 @@
 #__plugin__ {
+  font:12px/14px sans-serif;
   z-index: 10000;
   box-shadow: 0px 0px 5px #000;
   border: 1px solid black;
@@ -10,7 +11,6 @@
   overflow:hidden;
   background: white;
   text-align: center;
-  font-size: 12px;
 }
 
 #__head__ {
@@ -29,6 +29,10 @@
   width: 18px;
   height: 20px;
   float: right;
+}
+
+#__body__ {
+  text-align: center;
 }
 
 .__note__ {
@@ -85,7 +89,6 @@
   margin: 0;
 }
 #__select__ li {
-  z-index:100000;
   list-style: none;
   padding: 2px 0;
   margin: 10px 0;

@@ -55,60 +55,6 @@ function add(){
   }
 
 }
-/**
- *图片跑马灯程序{{{
- */
-//(function runPic(){
-//  var obj = document.createElement('div');
-//  obj.style.position = 'fixed';
-//  obj.style.overflow = 'hidden';
-//  obj.style.width = '400px';
-//  obj.style.height = '400px';
-//  obj.style.border = '1px solid #ccc';
-//  obj.style.left = '0px';
-//  obj.style.top = '0px';
-//  document.body.appendChild(obj);
-//  
-//  function createImg(){
-//    var imgsrc = chrome.extension.getURL('images/smile.gif');
-//    var img = new Image();
-//    img.src = imgsrc ;
-//    img.style.position = 'absolute' ;
-//    img.style.left = '400px' ;
-//    return img;
-//  }
-//  var img = createImg();
-//  var img2 = createImg();
-//  var img3 = createImg();
-//  obj.appendChild(img);
-//  obj.appendChild(img2);
-//  obj.appendChild(img3);
-//  
-//  left = 400 ;
-//  function move(){
-//    left -= 1 ;
-//    img.style.left = left + 'px';
-//    if( left< 100){
-//      img2.style.left = left+300 + 'px';
-//    }
-//    if( left<-200 ){
-//      img3.style.left = left+600 + 'px';
-//    }
-//  }
-//  var task = setInterval(function(){
-//    if( left <= -500 ){
-//      left = -200;
-//      var temp = img ;
-//      img = img1 ;
-//      img2 = img3 ;
-//      img3 = temp ;
-//    }
-//    move();
-//  },20);
-//})();//}}}
-
-
-
 
 //给input元素设置下拉菜单
 function downselect(obj,choices){
@@ -135,11 +81,11 @@ function downselect(obj,choices){
   objchoices.style.left = obj.offsetLeft + 'px' ;
 
   //TODO
-  displayChange = toggle( objchoices.style , 'display' , 'none' , 'block' );
+  var displayChange = toggle( objchoices.style , 'display' , 'none' , 'block' );
   objbt.onclick = function(){
     displayChange();
   }
-  
+  return displayChange;
   ////按钮 id+'bt' ; 选项列表 id+'choices'
   //objchoices.onclick = function(e){
   //  obj.value = e.target.innerHTML;
@@ -426,7 +372,7 @@ EditInPlaceField.prototype = {
       $('dschoices').onclick = function(e){
         that.containerElement.style.boxShadow = e.target.style.boxShadow ;
         that.containerElement.style.borderColor = e.target.style.borderColor;
-        displayChange();
+        NOTE.toolbarChange();
       }
       //objchoices.onclick = function(e){
       //  obj.value = e.target.innerHTML;
@@ -525,8 +471,7 @@ function HandleNoted(){
   s.className = '__input__';
   s.type = 'text';
   this.toolbar.appendChild(s);
-
-  downselect( s,['#08c','#BD362F','#F89406','#1000CC','#000']);
+  this.toolbarChange = downselect( s,['#08c','#BD362F','#F89406','#1000CC','#000']);
 }
 
 HandleNoted.prototype = {
@@ -628,3 +573,4 @@ loadStyleString('#__head-right__ { background: url('+resource+'sprite.gif) 0 -56
                +'.__note-close__ {background: url('+resource+'sprite.png) 0 298px } '
                +'.showAll {background: url('+resource+'sprite.gif) 0 -558px} '
                );
+
