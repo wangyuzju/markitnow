@@ -18,14 +18,14 @@ function add(){
   var body = document.createElement('div');
   body.id = '__body__' ;
   body.innerHTML = '<div class="__sep__"></div>'
-    +'<div class="bt __green__" id="highlight">高亮</div>'
-    +'<br><br><div class="bt __green__" id="recover">恢复</div>'
-    +'<br><br><div class="bt __green__" id="showMessage">清除</div>'
-    +'<br><br><div class="bt __green__" id="newNote">new Note!</div>'
-    +'<br><br><div class="bt __green__" id="saveNote">save Note!</div>'
-    +'<br><br><div class="bt __green__" id="loadNote">load Note!</div>'
-    +'<br><br><div class="bt __green__" id="sendMessage">在线备份</div>'
-    +'<br><br><div class="bt __green__" id="loadMessage">在线恢复</div>';
+    +'<div class="__bt__ __green__" id="highlight">高亮</div>'
+    +'<br><br><div class="__bt__ __green__" id="recover">恢复</div>'
+    +'<br><br><div class="__bt__ __green__" id="showMessage">清除</div>'
+    +'<br><br><div class="__bt__ __green__" id="newNote">new Note!</div>'
+    +'<br><br><div class="__bt__ __green__" id="saveNote">save Note!</div>'
+    +'<br><br><div class="__bt__ __green__" id="loadNote">load Note!</div>'
+    +'<br><br><div class="__bt__ __green__" id="sendMessage">在线备份</div>'
+    +'<br><br><div class="__bt__ __green__" id="loadMessage">在线恢复</div>';
   obj.appendChild(body);
   
   var headCallback = toggle(obj.style,'height','400px','25px');
@@ -124,7 +124,7 @@ function downselect(obj,choices){
   objchoices.id = id+'choices';
   var str = '';
   for(var i = 0 , l = choices.length ; i < l ; i++ ){
-    str+= '<li style="background:'+choices[i]+'"></li>'
+    str+= '<li style="box-shadow: 0 0 10px '+choices[i]+';border-color:'+choices[i]+'"></li>'
   }
   objchoices.innerHTML = str ;
   obj.parentNode.appendChild(objchoices);
@@ -374,6 +374,7 @@ EditInPlaceField.prototype = {
     this.containerElement.style.left = this.position.left ;
     if(this.appearance && (this.appearance.boxShadow != '')){
       this.containerElement.style.boxShadow = this.appearance.boxShadow ;
+      this.containerElement.style.borderColor = this.appearance.borderColor;
     }
     this.parentElement.appendChild(this.containerElement);
 
@@ -423,7 +424,8 @@ EditInPlaceField.prototype = {
       that.containerElement.appendChild(obj); 
       
       $('dschoices').onclick = function(e){
-        that.containerElement.style.boxShadow = '0 0 9px '+e.target.style.background ;
+        that.containerElement.style.boxShadow = e.target.style.boxShadow ;
+        that.containerElement.style.borderColor = e.target.style.borderColor;
         displayChange();
       }
       //objchoices.onclick = function(e){
@@ -475,7 +477,8 @@ EditInPlaceField.prototype = {
         height: obj.style.height
       },
       appearance: {
-        boxShadow: this.containerElement.style.boxShadow 
+        boxShadow: this.containerElement.style.boxShadow,
+        borderColor: this.containerElement.style.borderColor
       }
     }
   },
@@ -523,7 +526,7 @@ function HandleNoted(){
   s.type = 'text';
   this.toolbar.appendChild(s);
 
-  downselect( s,['#08c','red','#1000CC']);
+  downselect( s,['#08c','#BD362F','#F89406','#1000CC','#000']);
 }
 
 HandleNoted.prototype = {
