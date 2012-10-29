@@ -5,37 +5,45 @@ function $(id){ return document.getElementById(id); }
 function add(){
   var obj = document.createElement('div');
   obj.id = '__plugin__';
-  
-  var head = document.createElement('div');
-  head.id = '__head__';
-  head.innerHTML = '<div id="__head-left__"></div><div id="__head-right__"></div>'
-  obj.appendChild(head);
-
-  var sep = document.createElement('div');
-  sep.className = '__sep__';
-  obj.appendChild(sep);
 
   var body = document.createElement('div');
   body.id = '__body__' ;
-  body.innerHTML = '<div class="__sep__"></div>'
+  body.innerHTML = ''
     +'<div class="__bt__ __green__" id="highlight">高亮</div>'
     +'<br><br><div class="__bt__ __green__" id="recover">恢复</div>'
-    +'<br><br><div class="__bt__ __green__" id="showMessage">清除</div>'
-    +'<br><br><div class="__bt__ __green__" id="newNote">new Note!</div>'
-    +'<br><br><div class="__bt__ __green__" id="saveNote">save Note!</div>'
-    +'<br><br><div class="__bt__ __green__" id="loadNote">load Note!</div>'
-    +'<br><br><div class="__bt__ __green__" id="sendMessage">在线备份</div>'
-    +'<br><br><div class="__bt__ __green__" id="loadMessage">在线恢复</div>';
+    +'<br><br><div class="__bt__ __green__" id="showMessage">清除</div>';
+   // +'<br><br><div class="__bt__ __green__" id="newNote">new Note!</div>'
+   // +'<br><br><div class="__bt__ __green__" id="saveNote">save Note!</div>'
+   // +'<br><br><div class="__bt__ __green__" id="loadNote">load Note!</div>'
+   // +'<br><br><div class="__bt__ __green__" id="sendMessage">在线备份</div>'
+   // +'<br><br><div class="__bt__ __green__" id="loadMessage">在线恢复</div>';
   obj.appendChild(body);
   
-  var headCallback = toggle(obj.style,'height','400px','25px');
-  head.lastChild.onclick = function(){
-    //obj.style.height = '25px';
+
+  var footer = document.createElement('div');
+  footer.id = '__head__';
+  footer.innerHTML = '<div id="__head-left__">'
+    +'<span class="actionbt" id="newNote">新建</span>'
+    +'<span class="actionbt" id="sendMessage">备份</span>'
+    +'<span class="actionbt" id="loadMessage">恢复</span>'
+    +'</div><div id="__head-right__"></div>';
+  obj.appendChild(footer);
+
+  obj.style.height = '25px';
+  body.style.display = 'none';
+  //var headCallback = toggle(obj.style,'height','25px','400px');
+  var headCallback = toggle(body.style,'display','none','');
+  var changeHeight = toggle(obj.style,'height','25px','400px');
+  footer.lastChild.onclick = function(){
     headCallback();
+    var topVale = obj.style.top.slice(0,-2) - 0;
+    (changeHeight()) ? topVale -= 375 : topVale += 375; 
+    obj.style.top = topVale+'px';
+    
   }
 
   document.body.appendChild( obj );
-  drag( obj.firstChild.firstChild, obj );//如果放在前面，则其left和top都会被设置成0，因为obj还没有插入到DOM中去，
+  drag( footer.firstChild, obj );//如果放在前面，则其left和top都会被设置成0，因为obj还没有插入到DOM中去，
               //getBoundingClientRect()返回为空
               
   var hl = document.getElementById('highlight');
@@ -100,9 +108,11 @@ function toggle( obj,property,state1,state2){
     if(state){
       obj[property] = state2;
       state = 0;
+      return 1;
     }else{
       obj[property] = state1;
       state = 1;
+      return 0;
     }
   };
 }
@@ -450,12 +460,12 @@ $('newNote').onclick = function(){
   NOTE.newItem();
   NOTE.dumpItem();
 }
-$('saveNote').onclick = function(){
-  NOTE.localSave();
-}
-$('loadNote').onclick = function(){
-  NOTE.localLoad();
-}
+//$('saveNote').onclick = function(){
+//  NOTE.localSave();
+//}
+//$('loadNote').onclick = function(){
+//  NOTE.localLoad();
+//}
 
 function HandleNoted(){
   //var notes = {};//私有属性，只能通过this.method函数来访问，详见js设计模式p32
