@@ -1,51 +1,56 @@
 var PAGEURL = location.href ;
 
-function $(id){ return document.getElementById(id); }
-
 function add(){
-  var obj = document.createElement('div');
-  obj.id = '__plugin__';
+  var plugin = document.createElement('div');
+  plugin.id = '__plugin__';
+  plugin.onselectstart = function(){ return false; }
 
-  var body = document.createElement('div');
-  body.id = '__body__' ;
-  body.innerHTML = ''
-    +'<div class="__bt__ __green__" id="highlight">高亮</div>'
-    +'<br><br><div class="__bt__ __green__" id="recover">恢复</div>'
-    +'<br><br><div class="__bt__ __green__" id="showMessage">清除</div>';
-   // +'<br><br><div class="__bt__ __green__" id="newNote">new Note!</div>'
-   // +'<br><br><div class="__bt__ __green__" id="saveNote">save Note!</div>'
-   // +'<br><br><div class="__bt__ __green__" id="loadNote">load Note!</div>'
-   // +'<br><br><div class="__bt__ __green__" id="sendMessage">在线备份</div>'
-   // +'<br><br><div class="__bt__ __green__" id="loadMessage">在线恢复</div>';
-  obj.appendChild(body);
-  
+  plugin.innerHTML =
+        '<div id="__body__" style="display:none">'+
+          '<div class="__bt__ __green__" id="highlight">高亮</div>'+
+          '<br><br><div class="__bt__ __green__" id="recover">恢复</div>' +
+          '<br><br><div class="__bt__ __green__" id="showMessage">清除</div>'+
+        '</div>'+
+        '<div id="__head__">'+
+          '<div id="__head-left__">'+
+            '<span class="actionbt" id="newNote">新建</span>'+
+            '<span class="actionbt" id="sendMessage">备份</span>'+
+            '<span class="actionbt" id="loadMessage">恢复</span>'+
+          '</div>'+
+          '<div id="__head-right__"></div>'+
+        '</div>';
 
-  var footer = document.createElement('div');
-  footer.id = '__head__';
-  footer.innerHTML = '<div id="__head-left__">'
-    +'<span class="actionbt" id="newNote">新建</span>'
-    +'<span class="actionbt" id="sendMessage">备份</span>'
-    +'<span class="actionbt" id="loadMessage">恢复</span>'
-    +'</div><div id="__head-right__"></div>';
-  obj.appendChild(footer);
+  document.body.appendChild( plugin );
 
-  obj.style.height = '25px';
-  body.style.display = 'none';
-  //var headCallback = toggle(obj.style,'height','25px','400px');
-  var headCallback = toggle(body.style,'display','none','');
-  var changeHeight = toggle(obj.style,'height','25px','400px');
-  footer.lastChild.onclick = function(){
-    headCallback();
-    var topVale = obj.style.top.slice(0,-2) - 0;
-    (changeHeight()) ? topVale -= 375 : topVale += 375; 
-    obj.style.top = topVale+'px';
-    
-  }
+  /**
+   *Toggle Max/Min Size
+   */
+  var pluginId = '#' + plugin.id;
+  $('#__head-right__').click(function(){
+    if( $(pluginId).css('height') == '25px' ){
+      $( pluginId ).css('height','400px')
+      $( pluginId ).css('top', $(pluginId).css('top').slice(0,-2) - 375 + 'px')
+      $('#__body__').show();
+    }else{
+      $('#__plugin__').css('height','25px')
+      $( pluginId ).css('top', $(pluginId).css('top').slice(0,-2) - 0  + 375 + 'px')
+      $('#__body__').hide();
+    }
+  })
 
-  document.body.appendChild( obj );
-  drag( footer.firstChild, obj );//如果放在前面，则其left和top都会被设置成0，因为obj还没有插入到DOM中去，
-              //getBoundingClientRect()返回为空
-              
+  /**
+   *插入控制面板
+   */
+  //var f = document.createElement("iframe");
+  //f.id = "__plugin__"
+  //f.src = chrome.extension.getURL("interface.html");
+  //$('html').append(f);
+
+  drag( $('#__head-left__')[0] , plugin )
+
+  /***
+   *highlight related!
+   */
   var hl = document.getElementById('highlight');
   var range;
   hl.onmouseover = function(){
@@ -55,7 +60,6 @@ function add(){
     addToMarked(range);
     highlight(range);
   };
-  
 
   document.getElementById('showMessage').onclick = function(){
     delete localStorage.marked;
@@ -133,6 +137,7 @@ function drag(dragObj, moveObj){
   moveObj.style.top =  moveObj.style.top || moveObj.getBoundingClientRect().top +'px' ;
 
   dragObj.onmousedown = function(e){
+    document.onselectstart = function(){ return false };
     //有的时候，dragObj是外层容器，点击其内部会冒泡到它,因此要验证点击的是否是dragObj
     //if( e.target != dragObj ) { return ; }
     startX = e.clientX - moveObj.style.left.split('px')[0] ;
@@ -144,7 +149,8 @@ function drag(dragObj, moveObj){
     } ;
   }
   document.onmouseup = function(e){
-    document.onmousemove = '';
+    document.onselectstart = null;
+    document.onmousemove = null;
   }
 }
 
@@ -476,7 +482,7 @@ function HandleNoted(){
  //原型 '<div id="__select__"><input id="ds" class="__input__" type=text ></div>';
   this.toolbar = document.createElement('div');
   this.toolbar.id = '__select__';
-  var s = document.createElement('input');
+  var s = document.createElement('div');
   s.id = 'ds';
   s.className = '__input__';
   s.type = 'text';
@@ -583,4 +589,3 @@ loadStyleString('#__head-right__ { background: url('+resource+'sprite.gif) 0 -56
                +'.__note-close__ {background: url('+resource+'sprite.png) 0 298px } '
                +'.showAll {background: url('+resource+'sprite.gif) 0 -558px} '
                );
-

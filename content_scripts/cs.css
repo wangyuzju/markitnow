@@ -4,6 +4,7 @@
   box-shadow: 0px 0px 5px #000;
   border: 1px solid black;
   width: 150px;
+  height: 25px;
   position: fixed;
   right: 5px;
   bottom: 10px;
@@ -76,7 +77,8 @@
   height: 18px;
 }
 /**************************************下拉框***************************************/
-.__input__ {
+#__select__ .__input__ {
+  display:inline-block;
   height: 10px;
   width:60px;
   border-radius: 0px 10px 0px 5px;

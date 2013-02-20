@@ -4,7 +4,7 @@
   "manifest_version":2,
   "description":"这是第一个chrome插件",
   //加了这行才可以正常设置网页背景颜色
-  "permissions":[ 
+  "permissions":[
     "tabs","http://*/*","https://*/*",
     "notifications",
     "debugger"
@@ -16,13 +16,15 @@
   },
   "content_scripts":[{
     "matches":["http://*/*"],
-    "js":["content_scripts/content_script.js"],
-    "css":["content_scripts/cs.css"]
+    "js":["js/zepto.min.js","content_scripts/content_script.js"],
+    "css":["content_scripts/cs.css","css/global.css"]
+    //"run_at": "document_start"
   }],
   "web_accessible_resources":[
     "images/smile.gif",
     "content_scripts/sprite.gif",
-    "content_scripts/sprite.png"
+    "content_scripts/sprite.png",
+    "interface.html"
   ],
   "background":{
     "scripts":["background.js"]
