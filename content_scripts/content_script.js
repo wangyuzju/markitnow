@@ -25,6 +25,13 @@ p.init = function(){
   document.body.appendChild( plugin );
 
   /**
+   *shadow
+   */
+  this.shadow = document.createElement('div');
+  this.shadow.id = '__shadow__';
+  document.body.appendChild( this.shadow );
+
+  /**
    *Toggle Max/Min Size
    */
   var pluginId = '#' + plugin.id;
@@ -339,149 +346,6 @@ $('#loadMessage').click(function(){
   p.data.remoteLoad();
 });
 
-/* EditInPlaceField class. */
-
-function EditInPlaceField(id, parent, value, position, area, appearance) {
-  this.id = id; //保存的时候使用
-  this.value = value || 'default value';
-  this.parentElement = parent;
-  this.position = position || {top:'0px',left:'0px'} ;
-  this.area = area || {width:'160px', height:'60px'} ;
-  this.appearance = appearance ;
-  this.createElements(this.id);
-  //注册组件相关的各种事件
-  this.attachEvents();
-};
-
-EditInPlaceField.prototype = {
-  createElements: function(id) {
-    this.containerElement = document.createElement('div');
-    this.containerElement.id = id;
-    this.containerElement.className = '__note__';
-    this.containerElement.style.top = this.position.top ;
-    this.containerElement.style.left = window.innerWidth / 2 - this.position.left + 'px' ;
-    if(this.appearance && (this.appearance.boxShadow != '')){
-      this.containerElement.style.boxShadow = this.appearance.boxShadow ;
-      this.containerElement.style.borderColor = this.appearance.borderColor;
-    }
-    this.parentElement.appendChild(this.containerElement);
-
-    //this.staticElement = document.createElement('span');
-    //this.containerElement.appendChild(this.staticElement);
-    //this.staticElement.innerHTML = this.value;
-
-    this.fieldElement = document.createElement('textarea');
-    this.fieldElement.className = '__note-field__';
-    this.fieldElement.value = this.value;
-    this.fieldElement.style.width = this.area.width;
-    this.fieldElement.style.height = this.area.height;
-    this.containerElement.appendChild(this.fieldElement);
-
-    //this.saveButton = document.createElement('input');
-    //this.saveButton.type = 'button';
-    //this.saveButton.value = 'Save';
-    //this.containerElement.appendChild(this.saveButton);    
-    //
-    //this.cancelButton = document.createElement('input');
-    //this.cancelButton.type = 'button';
-    //this.cancelButton.value = 'Cancel';
-    //this.containerElement.appendChild(this.cancelButton);    
-
-    this.closeButton = document.createElement('div');
-    //this.closeButton.type = 'button';
-    //this.closeButton.value = '删除';
-    this.closeButton.className = '__note-close__';
-    this.containerElement.insertBefore( this.closeButton, this.fieldElement );
-
-    //this.convertToText();
-  },
-  attachEvents: function() {
-    drag( this.containerElement );
-    var that = this;
-    //this.staticElement.onclick = function() { that.convertToEditable() } ;
-    //this.saveButton.onclick = function() { that.save() } ;
-    //this.cancelButton.onclick = function() { that.cancel() } ;
-    //关闭按钮
-    this.closeButton.onmouseover = function() { that.closeButton.style.opacity = '1'; } ;
-    this.closeButton.onmouseout = function() { that.closeButton.style.opacity = '0'; } ;
-    this.closeButton.onmousedown = function() {
-      p.note.saveToolbar();
-      p.note.removeItem(that); } ;
-    this.fieldElement.onclick = function(){
-      var obj = p.note.getToolbar() ;
-      that.containerElement.appendChild(obj);
-
-      $('#dschoices').click(function(e){
-        that.containerElement.style.boxShadow = e.target.style.boxShadow ;
-        that.containerElement.style.borderColor = e.target.style.borderColor;
-        p.note.toolbarChange();
-      });
-      //objchoices.onclick = function(e){
-      //  obj.value = e.target.innerHTML;
-      //  displayChange();
-      //}
-    }
-  },
-
-  convertToEditable: function() {
-    this.staticElement.style.display = 'none';
-    this.fieldElement.style.display = 'inline';
-    this.saveButton.style.display = 'inline';
-    this.cancelButton.style.display = 'inline';
-
-    this.setValue(this.value);
-    this.fieldElement.focus();
-  },
-  save: function() {
-    this.value = this.getValue();
-    var that = this;
-    var callback = {
-      success: function() { that.convertToText(); },
-      failure: function() { alert('Error saving value.'); }
-    };
-    ajaxRequest('GET', 'save.php?id=' + this.id + '&value=' + this.value, callback);
-  },
-  cancel: function() {
-    this.convertToText();
-  },
-  convertToText: function() {
-    this.fieldElement.style.display = 'none';
-    this.saveButton.style.display = 'none';
-    this.cancelButton.style.display = 'none';
-    this.staticElement.style.display = 'inline';
-
-    this.setValue(this.value);
-  },
-  fetchConfig: function() {
-    var obj = this.fieldElement ;
-    return {
-      value: obj.value,
-        position: {
-          top: this.containerElement.style.top,
-          left: window.innerWidth / 2 - this.containerElement.style.left.slice(0,-2),
-        },
-        area: {
-          width: obj.style.width,
-          height: obj.style.height
-        },
-        appearance: {
-          boxShadow: this.containerElement.style.boxShadow,
-          borderColor: this.containerElement.style.borderColor
-        }
-    }
-  },
-  removeSelf: function(){
-    var obj = this.containerElement;
-    obj.parentElement.removeChild(obj);
-  },
-  setValue: function(value) {
-    this.fieldElement.value = value;
-    this.staticElement.innerHTML = value;
-  },
-  getValue: function() {
-    return this.fieldElement.value;
-  }
-};
 
 //var titleClassical = new EditInPlaceField('titleClassical', document.body , 'Title Here');
 //var currentTitleText = titleClassical.getValue();
@@ -493,35 +357,52 @@ $('#newNote').click(function(){
   p.note.dumpItem();
 });
 
-function HandleNoted(){
-  //var notes = {};//私有属性，只能通过this.method函数来访问，详见js设计模式p32
-  this.notes = {};
-  //this.notesSerial = {};  //这个全局变量导致读和写公用，直接导致bug,其实是无需的
-  this.i = 0 ;
 
-  //原型 '<div id="__select__"><input id="ds" class="__input__" type=text ></div>';
-  this.toolbar = document.createElement('div');
-  this.toolbar.id = '__select__';
-  var s = document.createElement('div');
-  s.id = 'ds';
-  s.className = '__input__';
-  s.type = 'text';
-  this.toolbar.appendChild(s);
-  this.toolbarChange = downselect( s,['#08c','#BD362F','#F89406','#1000CC','#000']);
-}
+/****
+ *Note Module
+ *
+ */
+(function(plugin){
+  /* note 所有标注的控制部分 */
+  var note = {
+    init: function(){
+      this.reset(); //clear the DOM Elements of notes
 
-HandleNoted.prototype = {
-  saveToolbar: function(){
-    if( this.toolbar.parentElement ){
-      this.toolbar.parentElement.removeChild(this.toolbar);
-    }
-  },
-  getToolbar: function(){
-    return this.toolbar ;
-  }
-  ,
+      //原型 '<div id="__select__"><input id="ds" class="__input__" type=text ></div>';
+      this.toolbarInit();
+
+      if( localStorage[PAGEURL] ){
+        p.note.localLoad();
+      }
+    },
+    toolbarInit:function(){
+      if( !document.getElementById('__select__') ){
+        this.toolbar = document.createElement('div');
+        this.toolbar.id = '__select__';
+        var s = document.createElement('div');
+        s.id = 'ds';
+        s.className = '__input__';
+        s.type = 'text';
+        this.toolbar.appendChild(s);
+        this.toolbarChange = downselect( s,['#08c','#BD362F','#F89406','#1000CC','#000']);
+      }
+    },
+    saveToolbar: function(){
+      if( this.toolbar.parentElement ){
+        this.toolbar.parentElement.removeChild(this.toolbar);
+      }
+    },
+    getToolbar: function(){
+      return this.toolbar ;
+    },
+    enterEditMode: function(){
+      $(p.shadow).show().animate({opacity: .8});
+    },
+    exitEditMode: function(){
+      $(p.shadow).animate({opacity: 0},function(){ $(this).hide() });
+    },
     newItem: function(){
-      this.notes[this.i] = new EditInPlaceField(this.i, 
+      this.notes[this.i] = new EditInPlaceField(this.i,
           document.body, new Date(), {top:window.scrollY+'px',left:'0px'});
       this.i ++ ;
     },
@@ -530,9 +411,9 @@ HandleNoted.prototype = {
       var i = --this.i ;//最后一个元素的id
       if( j != i ){//不相等，需要交换最后一个元素
         this.notes[j] = this.notes[i];
-        this.notes[j].id = j ; 
+        this.notes[j].id = j ;
       }
-      delete this.notes[i]; 
+      delete this.notes[i];
       document.body.removeChild(obj.containerElement);
     },
     reset: function(){
@@ -581,16 +462,151 @@ HandleNoted.prototype = {
         this.recoverItem( JSON.parse(localStorage[PAGEURL]) );
       }
     }
-}
-
-p.note = new HandleNoted();
-p.note.init = function(){
-  p.note.reset();
-  //自动恢复
-  if( localStorage[PAGEURL] ){
-    p.note.localLoad();
   }
-}
+
+  /* EditInPlaceField class. 单个标注的实例*/
+  function EditInPlaceField(id, parent, value, position, area, appearance) {
+    this.id = id; //保存的时候使用
+    this.value = value || 'default value';
+    this.parentElement = parent;
+    this.position = position || {top:'0px',left:'0px'} ;
+    this.area = area || { height:'60px'} ;
+    this.appearance = appearance ;
+    this.createElements(this.id);
+    //注册组件相关的各种事件
+    this.attachEvents();
+  };
+
+  EditInPlaceField.prototype = {
+    createElements: function(id) {
+      this.containerElement = document.createElement('div');
+      this.containerElement.id = id;
+      this.containerElement.className = '__note__';
+      this.containerElement.style.top = this.position.top ;
+      this.containerElement.style.left = window.innerWidth / 2 - this.position.left + 'px' ;
+      if(this.appearance && (this.appearance.boxShadow != '')){
+        this.containerElement.style.boxShadow = this.appearance.boxShadow ;
+        this.containerElement.style.borderColor = this.appearance.borderColor;
+      }
+      this.parentElement.appendChild(this.containerElement);
+
+      //this.staticElement = document.createElement('span');
+      //this.containerElement.appendChild(this.staticElement);
+      //this.staticElement.innerHTML = this.value;
+      /*文本显示区域*/
+      this.textElement = document.createElement('div');
+      this.textElement.className = '__note-text__';
+      this.textElement.innerHTML = this.value;
+      this.textElement.style.width = this.area.width;
+      this.textElement.style.height = this.area.height;
+      this.containerElement.appendChild(this.textElement);
+      /*编辑器*/
+      this.editorElement = document.createElement('textarea');
+      this.editorElement.className = '__note-editor__';
+      this.containerElement.appendChild(this.editorElement);
+      /*确定保存编辑结果按钮*/
+      this.saveButton = document.createElement('input');
+      this.saveButton.type = 'button';
+      this.saveButton.value = 'Save';
+      this.containerElement.appendChild(this.saveButton);
+      /*取消编辑按钮*/
+      this.cancelButton = document.createElement('input');
+      this.cancelButton.type = 'button';
+      this.cancelButton.value = 'Cancel';
+      this.containerElement.appendChild(this.cancelButton);
+
+      this.closeButton = document.createElement('div');
+      //this.closeButton.type = 'button';
+      //this.closeButton.value = '删除';
+      this.closeButton.className = '__note-close__';
+      this.containerElement.insertBefore( this.closeButton, this.textElement );
+
+      //this.convertToText();
+    },
+    attachEvents: function() {
+      drag( this.containerElement );
+      var that = this;
+      //this.staticElement.onclick = function() { that.convertToEditable() } ;
+      this.saveButton.onclick = function() { that.save() } ;
+      this.cancelButton.onclick = function() { that.cancel() } ;
+      //关闭按钮
+      this.closeButton.onmouseover = function() { that.closeButton.style.opacity = '1'; } ;
+      this.closeButton.onmouseout = function() { that.closeButton.style.opacity = '0'; } ;
+      this.closeButton.onmousedown = function() {
+        p.note.saveToolbar();
+        p.note.removeItem(that); } ;
+      this.textElement.ondblclick = function(){
+        p.note.enterEditMode();
+        that.convertToEditable(); }
+      /*Edit toolbar*/
+      //this.textElement.onclick = function(){
+      //  var obj = p.note.getToolbar() ;
+      //  that.containerElement.appendChild(obj);
+      //
+      //  $('#dschoices').click(function(e){
+      //    that.containerElement.style.boxShadow = e.target.style.boxShadow ;
+      //    that.containerElement.style.borderColor = e.target.style.borderColor;
+      //    p.note.toolbarChange();
+      //  });
+      //}
+    },
+
+    convertToEditable: function() {
+      this.saveButton.style.display = 'inline';
+      this.cancelButton.style.display = 'inline';
+
+      this.editorElement.value = this.textElement.innerHTML ;
+      this.editorElement.focus();
+    },
+    save: function() {
+      this.textElement.innerHTML = this.editorElement.value ;
+      p.note.exitEditMode();
+    },
+    cancel: function() {
+      p.note.exitEditMode();
+    },
+    convertToText: function() {
+      this.textElement.style.display = 'none';
+      this.saveButton.style.display = 'none';
+      this.cancelButton.style.display = 'none';
+      this.staticElement.style.display = 'inline';
+
+      this.setValue(this.value);
+    },
+    fetchConfig: function() {
+      var obj = this.textElement ;
+      return {
+        value: obj.innerHTML,
+          position: {
+            top: this.containerElement.style.top,
+            left: window.innerWidth / 2 - this.containerElement.style.left.slice(0,-2),
+          },
+          area: {
+            width: obj.style.width,
+            height: obj.style.height
+          },
+          appearance: {
+            boxShadow: this.containerElement.style.boxShadow,
+            borderColor: this.containerElement.style.borderColor
+          }
+      }
+    },
+    removeSelf: function(){
+      var obj = this.containerElement;
+      obj.parentElement.removeChild(obj);
+    },
+    setValue: function(value) {
+      this.textElement.value = value;
+      this.staticElement.innerHTML = value;
+    },
+    getValue: function() {
+      return this.textElement.value;
+    }
+  };
+
+  plugin.note = note ;
+})(p)
+
 p.note.init();
 
 /***
