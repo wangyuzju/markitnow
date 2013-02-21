@@ -1,24 +1,26 @@
 var PAGEURL = location.href ;
 
-function add(){
+var p = {} ;
+
+p.init = function(){
   var plugin = document.createElement('div');
   plugin.id = '__plugin__';
   plugin.onselectstart = function(){ return false; }
 
   plugin.innerHTML =
-        '<div id="__body__" style="display:none">'+
-          '<div class="__bt__ __green__" id="highlight">高亮</div>'+
-          '<br><br><div class="__bt__ __green__" id="recover">恢复</div>' +
-          '<br><br><div class="__bt__ __green__" id="showMessage">清除</div>'+
-        '</div>'+
-        '<div id="__head__">'+
-          '<div id="__head-left__">'+
-            '<span class="actionbt" id="newNote">新建</span>'+
-            '<span class="actionbt" id="sendMessage">备份</span>'+
-            '<span class="actionbt" id="loadMessage">恢复</span>'+
-          '</div>'+
-          '<div id="__head-right__"></div>'+
-        '</div>';
+    '<div id="__body__" style="display:none">'+
+    '<div class="__bt__ __green__" id="highlight">高亮</div>'+
+    '<br><br><div class="__bt__ __green__" id="recover">恢复</div>' +
+    '<br><br><div class="__bt__ __green__" id="showMessage">清除</div>'+
+    '</div>'+
+    '<div id="__head__">'+
+    '<div id="__head-left__">'+
+    '<span class="actionbt" id="newNote">新建</span>'+
+    '<span class="actionbt" id="sendMessage">备份</span>'+
+    '<span class="actionbt" id="loadMessage">恢复</span>'+
+    '</div>'+
+    '<div id="__head-right__"></div>'+
+    '</div>';
 
   document.body.appendChild( plugin );
 
@@ -29,12 +31,12 @@ function add(){
   $('#__head-right__').click(function(){
     if( $(pluginId).css('height') == '25px' ){
       $( pluginId ).css('height','400px')
-      $( pluginId ).css('top', $(pluginId).css('top').slice(0,-2) - 375 + 'px')
-      $('#__body__').show();
+    $( pluginId ).css('top', $(pluginId).css('top').slice(0,-2) - 375 + 'px')
+    $('#__body__').show();
     }else{
-      $('#__plugin__').css('height','25px')
-      $( pluginId ).css('top', $(pluginId).css('top').slice(0,-2) - 0  + 375 + 'px')
-      $('#__body__').hide();
+      $(pluginId).css('height','25px')
+    $( pluginId ).css('top', $(pluginId).css('top').slice(0,-2) - 0  + 375 + 'px')
+    $('#__body__').hide();
     }
   })
 
@@ -48,10 +50,10 @@ function add(){
 
   drag( $('#__head-left__')[0] , plugin )
 
-  /***
-   *highlight related!
-   */
-  var hl = document.getElementById('highlight');
+    /***
+     *highlight related!
+     */
+    var hl = document.getElementById('highlight');
   var range;
   hl.onmouseover = function(){
     range = prepareRange();
@@ -68,6 +70,8 @@ function add(){
 
 }
 
+p.init();
+
 //给input元素设置下拉菜单
 function downselect(obj,choices){
   //var obj = document.getElementById(id);
@@ -77,7 +81,7 @@ function downselect(obj,choices){
   objbt.id = id+'bt' ;
   objbt.className = 'showAll';
   obj.parentNode.appendChild(objbt);
-  
+
   var objchoices = document.createElement('ul');
   objchoices.id = id+'choices';
   var str = '';
@@ -151,6 +155,7 @@ function drag(dragObj, moveObj){
   document.onmouseup = function(e){
     document.onselectstart = null;
     document.onmousemove = null;
+    p.data.localSave();
   }
 }
 
@@ -197,58 +202,57 @@ function highlight(range){
   }
 }
 
-add();
 
-  /**
-   *存储range，以便于恢复
-   */
-  function addToMarked(range){
-    var rangeid = range.toString();
-    marked[rangeid] = {
-      'start': {
-        'tagName': range.startContainer.parentNode.nodeName,
-        'index': locate( range.startContainer.parentNode ),
-        'offset': range.startOffset},
-      'end': {
-        'tagName': range.endContainer.parentNode.nodeName,
-        'index': locate(range.endContainer.parentNode),
-        'offset': range.endOffset},
-      'hlMethod': range.hlMethod,
-      'hlObject': range.hlObject
-      };
-  }
-  /**编码位置
-   *@param {Element} obj 需要定位的元素 
-   *@return {Number} 位置信息
-   */
-  function locate(obj){
-    var tagName = obj.nodeName ;
-    var items = document.getElementsByTagName(tagName);
-    for(var i = 0 ,l = items.length; i < l ; i++){
-      if(obj === items[i] ){
-        return i ;
-      }
+
+/**
+ *存储range，以便于恢复
+ */
+function addToMarked(range){
+  var rangeid = range.toString();
+  marked[rangeid] = {
+    'start': {
+      'tagName': range.startContainer.parentNode.nodeName,
+      'index': locate( range.startContainer.parentNode ),
+      'offset': range.startOffset},
+    'end': {
+      'tagName': range.endContainer.parentNode.nodeName,
+      'index': locate(range.endContainer.parentNode),
+      'offset': range.endOffset},
+    'hlMethod': range.hlMethod,
+    'hlObject': range.hlObject
+  };
+}
+/**编码位置
+ *@param {Element} obj 需要定位的元素 
+ *@return {Number} 位置信息
+ */
+function locate(obj){
+  var tagName = obj.nodeName ;
+  var items = document.getElementsByTagName(tagName);
+  for(var i = 0 ,l = items.length; i < l ; i++){
+    if(obj === items[i] ){
+      return i ;
     }
   }
-  /**解码位置
-   *@param {object} 包含range信息的对象
-   *@return {Range} 
-   **/
-  function decodeLocation(rangeInfo){
-    var range = document.createRange();
-    var startItem = document.getElementsByTagName(rangeInfo.start.tagName).item(rangeInfo.start.index).childNodes[0];
-    var startOffset = rangeInfo.start.offset ;
-    var stopItem = document.getElementsByTagName(rangeInfo.end.tagName).item(rangeInfo.end.index).childNodes[0];
-    var stopOffset = rangeInfo.end.offset ;
-    range.setStart(startItem,startOffset);
-    range.setEnd(stopItem,stopOffset);   
-    range.hlMethod = rangeInfo.hlMethod;
-    range.hlObject = rangeInfo.hlObject;
-    return range ;
-  }
+}
+/**解码位置
+ *@param {object} 包含range信息的对象
+ *@return {Range}
+ **/
+function decodeLocation(rangeInfo){
+  var range = document.createRange();
+  var startItem = document.getElementsByTagName(rangeInfo.start.tagName).item(rangeInfo.start.index).childNodes[0];
+  var startOffset = rangeInfo.start.offset ;
+  var stopItem = document.getElementsByTagName(rangeInfo.end.tagName).item(rangeInfo.end.index).childNodes[0];
+  var stopOffset = rangeInfo.end.offset ;
+  range.setStart(startItem,startOffset);
+  range.setEnd(stopItem,stopOffset);
+  range.hlMethod = rangeInfo.hlMethod;
+  range.hlObject = rangeInfo.hlObject;
+  return range ;
+}
 //点击恢复
-var obj = document.getElementById('recover');
-obj.onclick = recover ;
+$('#recover').click(recover);
 function recover(){
   if( localStorage.marked != null){
     marked = JSON.parse(localStorage.marked);
@@ -268,35 +272,27 @@ function handleMarked(items) {
   }
 }
 
-  //注册自动保存事件
-  window.onunload = function(){
-    //for(var mem in marked){
-    //  break ;
-    //}
-    //if( marked[mem]=== undefined ){ 
-    //  return ;
-    //}
-    //localStorage.marked = JSON.stringify(marked);
-    //此处不用判断NOTE.i > 0 ，因为删除事件是在localSave()里面定义的，不然就无法删除最后一个元素了
-    NOTE.localSave();
+/****
+ *Save/Recover
+ */
+(function(plugin){
+  var pub = {} ;
+  /***
+   *localSave
+   */
+  pub.localSave = function(){
+    plugin.note.localSave();
   }
 
-  //注册发送事件
-  var obj = document.getElementById('sendMessage');
-
-  obj.onclick = function(){
-    NOTE.localSave();
-    //var message = JSON.stringify(marked);
-    //chrome.extension.sendMessage( message, function(response){
-    //  console.log(response);
-    //});
+  pub.remoteSave = function(){
+    plugin.note.localSave();
+    //send data to extension
     chrome.extension.sendMessage( localStorage[PAGEURL] || 'delete', function(response){
       console.log(response);
     });
   }
-  //注册接收事件
-  var obj = document.getElementById('loadMessage');
-  obj.onclick = function(){
+
+  pub.remoteLoad = function(){
     var message = 'load';
     chrome.extension.sendMessage( message, function(response){//该函数里面不用用alert阻塞语句
       //setTimeout(function(){alert(response)},10);//通过设置一个延迟来解决该Error,在NOTE.localLoad()语句里面
@@ -305,14 +301,44 @@ function handleMarked(items) {
       }else{
         localStorage[PAGEURL] = response;
       }
-      NOTE.reset();
-      NOTE.localLoad();
+      plugin.note.reset();
+      plugin.note.localLoad();
     });
   }
 
-/**
- *
- */
+  plugin.data = pub ;
+})( p );
+
+//注册自动保存事件
+window.onunload = function(){
+  //for(var mem in marked){
+  //  break ;
+  //}
+  //if( marked[mem]=== undefined ){
+  //  return ;
+  //}
+  //localStorage.marked = JSON.stringify(marked);
+  //此处不用判断NOTE.i > 0 ，因为删除事件是在localSave()里面定义的，不然就无法删除最后一个元素了
+  p.data.localSave();
+}
+
+window.onresize = function(){
+  clearTimeout ( arguments.callee.tid );
+  arguments.callee.tid = setTimeout(function(){
+    //p.data.localSave();
+    p.note.init();
+  },20)
+}
+
+//注册发送事件
+$('#sendMessage').click(function(){
+  p.data.remoteSave();
+})
+//注册接收事件
+$('#loadMessage').click(function(){
+  p.data.remoteLoad();
+});
+
 /* EditInPlaceField class. */
 
 function EditInPlaceField(id, parent, value, position, area, appearance) {
@@ -333,7 +359,7 @@ EditInPlaceField.prototype = {
     this.containerElement.id = id;
     this.containerElement.className = '__note__';
     this.containerElement.style.top = this.position.top ;
-    this.containerElement.style.left = this.position.left ;
+    this.containerElement.style.left = window.innerWidth / 2 - this.position.left + 'px' ;
     if(this.appearance && (this.appearance.boxShadow != '')){
       this.containerElement.style.boxShadow = this.appearance.boxShadow ;
       this.containerElement.style.borderColor = this.appearance.borderColor;
@@ -343,14 +369,14 @@ EditInPlaceField.prototype = {
     //this.staticElement = document.createElement('span');
     //this.containerElement.appendChild(this.staticElement);
     //this.staticElement.innerHTML = this.value;
-    
+
     this.fieldElement = document.createElement('textarea');
     this.fieldElement.className = '__note-field__';
     this.fieldElement.value = this.value;
     this.fieldElement.style.width = this.area.width;
     this.fieldElement.style.height = this.area.height;
     this.containerElement.appendChild(this.fieldElement);
-    
+
     //this.saveButton = document.createElement('input');
     //this.saveButton.type = 'button';
     //this.saveButton.value = 'Save';
@@ -360,13 +386,13 @@ EditInPlaceField.prototype = {
     //this.cancelButton.type = 'button';
     //this.cancelButton.value = 'Cancel';
     //this.containerElement.appendChild(this.cancelButton);    
-    
+
     this.closeButton = document.createElement('div');
     //this.closeButton.type = 'button';
     //this.closeButton.value = '删除';
     this.closeButton.className = '__note-close__';
     this.containerElement.insertBefore( this.closeButton, this.fieldElement );
-    
+
     //this.convertToText();
   },
   attachEvents: function() {
@@ -378,30 +404,30 @@ EditInPlaceField.prototype = {
     //关闭按钮
     this.closeButton.onmouseover = function() { that.closeButton.style.opacity = '1'; } ;
     this.closeButton.onmouseout = function() { that.closeButton.style.opacity = '0'; } ;
-    this.closeButton.onmousedown = function() {  
-      NOTE.saveToolbar();
-      NOTE.removeItem(that); } ;
-    this.fieldElement.onclick = function(){ 
-      var obj = NOTE.getToolbar() ;
-      that.containerElement.appendChild(obj); 
-      
-      $('dschoices').onclick = function(e){
+    this.closeButton.onmousedown = function() {
+      p.note.saveToolbar();
+      p.note.removeItem(that); } ;
+    this.fieldElement.onclick = function(){
+      var obj = p.note.getToolbar() ;
+      that.containerElement.appendChild(obj);
+
+      $('#dschoices').click(function(e){
         that.containerElement.style.boxShadow = e.target.style.boxShadow ;
         that.containerElement.style.borderColor = e.target.style.borderColor;
-        NOTE.toolbarChange();
-      }
+        p.note.toolbarChange();
+      });
       //objchoices.onclick = function(e){
       //  obj.value = e.target.innerHTML;
       //  displayChange();
       //}
     }
   },
-  
+
   convertToEditable: function() {
     this.staticElement.style.display = 'none';
     this.fieldElement.style.display = 'inline';
     this.saveButton.style.display = 'inline';
-    this.cancelButton.style.display = 'inline';        
+    this.cancelButton.style.display = 'inline';
 
     this.setValue(this.value);
     this.fieldElement.focus();
@@ -421,7 +447,7 @@ EditInPlaceField.prototype = {
   convertToText: function() {
     this.fieldElement.style.display = 'none';
     this.saveButton.style.display = 'none';
-    this.cancelButton.style.display = 'none';     
+    this.cancelButton.style.display = 'none';
     this.staticElement.style.display = 'inline';
 
     this.setValue(this.value);
@@ -430,18 +456,18 @@ EditInPlaceField.prototype = {
     var obj = this.fieldElement ;
     return {
       value: obj.value,
-      position: {
-        top: this.containerElement.style.top,
-        left: this.containerElement.style.left,
-      },
-      area: {
-        width: obj.style.width,
-        height: obj.style.height
-      },
-      appearance: {
-        boxShadow: this.containerElement.style.boxShadow,
-        borderColor: this.containerElement.style.borderColor
-      }
+        position: {
+          top: this.containerElement.style.top,
+          left: window.innerWidth / 2 - this.containerElement.style.left.slice(0,-2),
+        },
+        area: {
+          width: obj.style.width,
+          height: obj.style.height
+        },
+        appearance: {
+          boxShadow: this.containerElement.style.boxShadow,
+          borderColor: this.containerElement.style.borderColor
+        }
     }
   },
   removeSelf: function(){
@@ -460,18 +486,12 @@ EditInPlaceField.prototype = {
 //var titleClassical = new EditInPlaceField('titleClassical', document.body , 'Title Here');
 //var currentTitleText = titleClassical.getValue();
 
-$('newNote').onclick = function(){
+$('#newNote').click(function(){
   console.log('create!');
   //new EditInPlaceField('null',document.body, new Date(), {top:window.scrollY,left:0});
-  NOTE.newItem();
-  NOTE.dumpItem();
-}
-//$('saveNote').onclick = function(){
-//  NOTE.localSave();
-//}
-//$('loadNote').onclick = function(){
-//  NOTE.localLoad();
-//}
+  p.note.newItem();
+  p.note.dumpItem();
+});
 
 function HandleNoted(){
   //var notes = {};//私有属性，只能通过this.method函数来访问，详见js设计模式p32
@@ -479,7 +499,7 @@ function HandleNoted(){
   //this.notesSerial = {};  //这个全局变量导致读和写公用，直接导致bug,其实是无需的
   this.i = 0 ;
 
- //原型 '<div id="__select__"><input id="ds" class="__input__" type=text ></div>';
+  //原型 '<div id="__select__"><input id="ds" class="__input__" type=text ></div>';
   this.toolbar = document.createElement('div');
   this.toolbar.id = '__select__';
   var s = document.createElement('div');
@@ -500,82 +520,84 @@ HandleNoted.prototype = {
     return this.toolbar ;
   }
   ,
-  newItem: function(){
-    this.notes[this.i] = new EditInPlaceField(this.i, 
-      document.body, new Date(), {top:window.scrollY+'px',left:'0px'});
-    this.i ++ ;
-  },
-  removeItem: function(obj){
-    var j = obj.id;
-    var i = --this.i ;//最后一个元素的id
-    if( j != i ){//不相等，需要交换最后一个元素
-      this.notes[j] = this.notes[i];
-      this.notes[j].id = j ; 
+    newItem: function(){
+      this.notes[this.i] = new EditInPlaceField(this.i, 
+          document.body, new Date(), {top:window.scrollY+'px',left:'0px'});
+      this.i ++ ;
+    },
+    removeItem: function(obj){
+      var j = obj.id;
+      var i = --this.i ;//最后一个元素的id
+      if( j != i ){//不相等，需要交换最后一个元素
+        this.notes[j] = this.notes[i];
+        this.notes[j].id = j ; 
+      }
+      delete this.notes[i]; 
+      document.body.removeChild(obj.containerElement);
+    },
+    reset: function(){
+      for(var i = 0 , l = this.i ; i < l ; i++ ){
+        this.notes[i].removeSelf();
+        console.log('removed');
+      }
+      this.notes = {};
+      this.i = 0 ;
+    },
+    echoItem:function(){
+      console.log(this.notes);
+    },
+    dumpItem:function(){
+      //初始化 从localStorage载入的notesSerial 好惨的bug。。。
+      var notesSerial = {};
+      for(var i = 0,l = this.i; i < l ; i++){
+        notesSerial[i] = this.notes[i].fetchConfig();
+      }
+      notesSerial.total = l;//没有块级作用域，可以引用
+      return notesSerial;
+    },
+    recoverItem: function(obj){
+      for(var i = 0,l = obj.total; i < l ; i++ ){
+        this.notes[i] = new EditInPlaceField( i,
+            document.body, obj[i].value, obj[i].position, obj[i].area, obj[i].appearance);
+      }
+      this.i = l ; //对应上面
+    },
+    localSave: function(){
+      if( this.i === 0 ){//该语句在处理同域请求会出bug,比如子域没有设置，在从子域跳转到主域时，会清空主域下设置的key
+        //改变了key的设置方法，此bug不再存在
+        delete localStorage[PAGEURL];
+      }else{
+        localStorage[PAGEURL] = JSON.stringify( this.dumpItem() );
+      }
+    },
+    localLoad: function(){
+      if(!localStorage[PAGEURL]){//这里如果用alert会触发chrome插件的error,因为阻塞了sendMessage的response事件
+        //Error in event handler for 'undefined': Cannot call method 'disconnect' of null TypeError: Cannot call method 'disconnect' of null
+        setTimeout(function(){ //设置延时解决该bug
+          alert('没有可加载的note');
+        },10);
+        return ;
+      }else{
+        this.recoverItem( JSON.parse(localStorage[PAGEURL]) );
+      }
     }
-    delete this.notes[i]; 
-    document.body.removeChild(obj.containerElement);
-  },
-  reset: function(){
-    for(var i = 0 , l = this.i ; i < l ; i++ ){
-      this.notes[i].removeSelf();
-      console.log('removed');
-    }
-    this.notes = {};
-    this.i = 0 ;
-  },
-  echoItem:function(){
-    console.log(this.notes);
-  },
-  dumpItem:function(){
-    //初始化 从localStorage载入的notesSerial 好惨的bug。。。
-    var notesSerial = {};
-    for(var i = 0,l = this.i; i < l ; i++){
-      notesSerial[i] = this.notes[i].fetchConfig();
-    }
-    notesSerial.total = l;//没有块级作用域，可以引用
-    return notesSerial;
-  },
-  recoverItem: function(obj){
-    for(var i = 0,l = obj.total; i < l ; i++ ){
-      this.notes[i] = new EditInPlaceField( i,
-        document.body, obj[i].value, obj[i].position, obj[i].area, obj[i].appearance);
-    }
-    this.i = l ; //对应上面
-  },
-  localSave: function(){
-    if( this.i === 0 ){//该语句在处理同域请求会出bug,比如子域没有设置，在从子域跳转到主域时，会清空主域下设置的key
-      //改变了key的设置方法，此bug不再存在
-      delete localStorage[PAGEURL];
-    }else{
-      localStorage[PAGEURL] = JSON.stringify( this.dumpItem() );
-    }
-  },
-  localLoad: function(){
-    if(!localStorage[PAGEURL]){//这里如果用alert会触发chrome插件的error,因为阻塞了sendMessage的response事件
-      //Error in event handler for 'undefined': Cannot call method 'disconnect' of null TypeError: Cannot call method 'disconnect' of null
-      setTimeout(function(){ //设置延时解决该bug
-        alert('没有可加载的note');
-      },10);
-      return ;
-    }else{
-      this.recoverItem( JSON.parse(localStorage[PAGEURL]) );
-    }
+}
+
+p.note = new HandleNoted();
+p.note.init = function(){
+  p.note.reset();
+  //自动恢复
+  if( localStorage[PAGEURL] ){
+    p.note.localLoad();
   }
 }
-
-var NOTE = new HandleNoted();
-
-//自动恢复
-if( localStorage[PAGEURL] ){
-  NOTE.localLoad();  
-}
-
+p.note.init();
 
 /***
  *动态设置css：因为涉及到chrome.extension.getURL()的读取
  *
  */
-var resource = chrome.extension.getURL('content_scripts/') ;
+var imageResource = chrome.extension.getURL('content_scripts/') ;
 
 function loadStyleString(css){
   var style = document.createElement('style');
@@ -585,7 +607,7 @@ function loadStyleString(css){
   head.appendChild(style);
 }
 
-loadStyleString('#__head-right__ { background: url('+resource+'sprite.gif) 0 -56px } '
-               +'.__note-close__ {background: url('+resource+'sprite.png) 0 298px } '
-               +'.showAll {background: url('+resource+'sprite.gif) 0 -558px} '
-               );
+loadStyleString('#__head-right__ { background: url('+imageResource+'sprite.gif) 0 -56px } '
+    +'.__note-close__ {background: url('+imageResource+'sprite.png) 0 298px } '
+    +'.showAll {background: url('+imageResource+'sprite.gif) 0 -558px} '
+    );
