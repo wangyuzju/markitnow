@@ -103,7 +103,7 @@ var p = {} ;
     var startX,
       startY,
       minWidth = 160,
-      minHeight = 50 ;
+      minHeight = 50;
 
     /*初次调用会写死其宽度和高度*/
     resizeObj.style.width = resizeObj.style.width || resizeObj.getBoundingClientRect().width + 'px';
@@ -125,34 +125,44 @@ var p = {} ;
       document.onmousemove = function(e){
         switch( resizeDirect ){
           case 'height':
-            resizeObj.style.height =  e.clientY - startY  + 'px';
+            var newHeight = e.clientY - startY ;
+
+            newHeight > minHeight  ? resizeObj.style.height = ( newHeight  + 'px') : '' ;
             break;
           case 'width':
-            resizeObj.style.width =  e.clientX - startX  + 'px';
+            var newWidth = e.clientX - startX ;
+
+            newWidth> minWidth  ? resizeObj.style.width = ( newWidth  + 'px') : '' ;
             break;
           case 'leftWidth':
           case 'leftWidthHeight':
             var moveSpace = e.clientX - startLeft ;
-            /*宽度缩小移动的距离*/
-            resizeObj.style.width =  resizeObj.style.width.split('px')[0] - 0 - moveSpace  + 'px';
-            /*add! adjust left value for resizing by left side*/
-            adjustObj.style.left = adjustObj.style.left.split('px')[0] - 0 + moveSpace + 'px';
-            /*因为每次拖拽事件都要在现在的基础上加上移动距离，所以要更新原始点击的位置
-             *而其余的都是在原始的基础上加上最终移动的距离，所以不必更新原始点击的位置
-             */
+            var newWidth = resizeObj.style.width.split('px')[0] - 0 - moveSpace ,
+              newHeight = e.clientY - startY ;
+
+            if( newWidth > minWidth ){
+              /*宽度缩小移动的距离*/
+              resizeObj.style.width =  newWidth  + 'px';
+              /*add! adjust left value for resizing by left side*/
+              adjustObj.style.left = adjustObj.style.left.split('px')[0] - 0 + moveSpace + 'px';
+              /*因为每次拖拽事件都要在现在的基础上加上移动距离，所以要更新原始点击的位置
+               *而其余的都是在原始的基础上加上最终移动的距离，所以不必更新原始点击的位置
+               */
+            }
             startLeft = e.clientX ;
 
-            if( resizeDirect == 'leftWidthHeight' ){
-              resizeObj.style.height =  e.clientY - startY  + 'px';
+            if( resizeDirect == 'leftWidthHeight' && newHeight > minHeight ){
+              resizeObj.style.height =  newHeight  + 'px';
             }
             break;
           default:
-            resizeObj.style.width =  e.clientX - startX  + 'px';
-            resizeObj.style.height =  e.clientY - startY  + 'px';
+            var newWidth = e.clientX - startX ,
+              newHeight = e.clientY - startY ;
+
+            newWidth > minWidth ? resizeObj.style.width =  newWidth  + 'px' : '' ;
+            newHeight > minHeight ? resizeObj.style.height =  newHeight  + 'px': '' ;
             break;
         }
-      //startX = e.clientX - resizeObj.style.width.split('px')[0];
-      //startY = e.clientY - resizeObj.style.height.split('px')[0];
       }
       /*清除拖拽事件*/
       var cbBackUp = document.onmouseup ;
