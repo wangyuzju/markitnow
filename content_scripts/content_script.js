@@ -2,169 +2,251 @@ var PAGEURL = location.href ;
 
 var p = {} ;
 
-p.init = function(){
-  var plugin = document.createElement('div');
-  plugin.id = '__plugin__';
-  plugin.onselectstart = function(){ return false; }
-
-  plugin.innerHTML =
-    '<div id="__body__" style="display:none">'+
-    '<div class="__bt__ __green__" id="highlight">高亮</div>'+
-    '<br><br><div class="__bt__ __green__" id="recover">恢复</div>' +
-    '<br><br><div class="__bt__ __green__" id="showMessage">清除</div>'+
-    '</div>'+
-    '<div id="__head__">'+
-    '<div id="__head-left__">'+
-    '<span class="actionbt" id="newNote">新建</span>'+
-    '<span class="actionbt" id="sendMessage">备份</span>'+
-    '<span class="actionbt" id="loadMessage">恢复</span>'+
-    '</div>'+
-    '<div id="__head-right__"></div>'+
-    '</div>';
-
-  document.body.appendChild( plugin );
-
-  /**
-   *shadow
-   */
-  this.shadow = document.createElement('div');
-  this.shadow.id = '__shadow__';
-  document.body.appendChild( this.shadow );
-
-  /**
-   *Toggle Max/Min Size
-   */
-  var pluginId = '#' + plugin.id;
-  $('#__head-right__').click(function(){
-    if( $(pluginId).css('height') == '25px' ){
-      $( pluginId ).css('height','400px')
-    $( pluginId ).css('top', $(pluginId).css('top').slice(0,-2) - 375 + 'px')
-    $('#__body__').show();
-    }else{
-      $(pluginId).css('height','25px')
-    $( pluginId ).css('top', $(pluginId).css('top').slice(0,-2) - 0  + 375 + 'px')
-    $('#__body__').hide();
-    }
-  })
-
-  /**
-   *插入控制面板
-   */
-  //var f = document.createElement("iframe");
-  //f.id = "__plugin__"
-  //f.src = chrome.extension.getURL("interface.html");
-  //$('html').append(f);
-
-  drag( $('#__head-left__')[0] , plugin )
-
-    /***
-     *highlight related!
-     */
-    var hl = document.getElementById('highlight');
-  var range;
-  hl.onmouseover = function(){
-    range = prepareRange();
-  };
-  hl.onclick = function(){
-    addToMarked(range);
-    highlight(range);
-  };
-
-  document.getElementById('showMessage').onclick = function(){
-    delete localStorage.marked;
-    marked = {} ;
-  }
-
-}
-
-p.init();
-
-//给input元素设置下拉菜单
-function downselect(obj,choices){
-  //var obj = document.getElementById(id);
-  var id = obj.id;
-
-  var objbt = document.createElement('div');
-  objbt.id = id+'bt' ;
-  objbt.className = 'showAll';
-  obj.parentNode.appendChild(objbt);
-
-  var objchoices = document.createElement('ul');
-  objchoices.id = id+'choices';
-  var str = '';
-  for(var i = 0 , l = choices.length ; i < l ; i++ ){
-    str+= '<li style="box-shadow: 0 0 10px '+choices[i]+';border-color:'+choices[i]+'"></li>'
-  }
-  objchoices.innerHTML = str ;
-  obj.parentNode.appendChild(objchoices);
-
-  objchoices.style.position = 'absolute';
-  objchoices.style.display = 'none';
-  objchoices.style.width = obj.clientWidth + 'px' ;
-  objchoices.style.left = obj.offsetLeft + 'px' ;
-
-  //TODO
-  var displayChange = toggle( objchoices.style , 'display' , 'none' , 'block' );
-  objbt.onclick = function(){
-    displayChange();
-  }
-  return displayChange;
-  ////按钮 id+'bt' ; 选项列表 id+'choices'
-  //objchoices.onclick = function(e){
-  //  obj.value = e.target.innerHTML;
-  //  displayChange();
-  //}
-}
-
-//toggle
-function toggle( obj,property,state1,state2){
-  var state = 1 ;
-  return function(){
-    if(state){
-      obj[property] = state2;
-      state = 0;
-      return 1;
-    }else{
-      obj[property] = state1;
-      state = 1;
-      return 0;
-    }
-  };
-}
-
-
-/**
- *drag 
- *@param {Element} dragObj 点击的对象
- *@param {Element} moveObj 需要移动的对象
+/****
+ *p.util
+ *共用程序
  */
-function drag(dragObj, moveObj){
-  moveObj = moveObj || dragObj ;
-  var startX
-    ,startY
-    ,stop ;
-  //注意此方法是以当前窗口为0px，也就是说如果页面有滚动的话，要加上scrollY值
-  moveObj.style.left = moveObj.style.left || moveObj.getBoundingClientRect().left + 'px' ;
-  moveObj.style.top =  moveObj.style.top || moveObj.getBoundingClientRect().top +'px' ;
+(function(plugin){
+  var pub = {};
+  /*下拉菜单*/
+  pub.downselect = function(obj, choices){
+    var id = obj.id;
 
-  dragObj.onmousedown = function(e){
-    document.onselectstart = function(){ return false };
-    //有的时候，dragObj是外层容器，点击其内部会冒泡到它,因此要验证点击的是否是dragObj
-    //if( e.target != dragObj ) { return ; }
-    startX = e.clientX - moveObj.style.left.split('px')[0] ;
-    startY = e.clientY - moveObj.style.top.split('px')[0] ;
-    var that = moveObj ;//that为要移动的对象；
-    document.onmousemove = function(e){
-      that.style.left = e.clientX - startX + 'px' ;
-      that.style.top = e.clientY - startY + 'px' ;
-    } ;
+    var objbt = document.createElement('div');
+    objbt.id = id+'bt' ;
+    objbt.className = 'showAll';
+    obj.parentNode.appendChild(objbt);
+
+    var objchoices = document.createElement('ul');
+    objchoices.id = id+'choices';
+    var str = '';
+    for(var i = 0 , l = choices.length ; i < l ; i++ ){
+      str+= '<li style="box-shadow: 0 0 10px '+choices[i]+';border-color:'+choices[i]+'"></li>'
+    }
+    objchoices.innerHTML = str ;
+    obj.parentNode.appendChild(objchoices);
+
+    objchoices.style.position = 'absolute';
+    objchoices.style.display = 'none';
+    objchoices.style.width = obj.clientWidth + 'px' ;
+    objchoices.style.left = obj.offsetLeft + 'px' ;
+
+    //TODO
+    var displayChange = plugin.util.toggle( objchoices.style , 'display' , 'none' , 'block' );
+    objbt.onclick = function(){
+      displayChange();
+    }
+    return displayChange;
   }
-  document.onmouseup = function(e){
-    document.onselectstart = null;
-    document.onmousemove = null;
-    p.data.localSave();
+  /*变换状态*/
+  pub.toggle = function(obj, property, state1, state2){
+    var state = 1 ;
+    return function(){
+      if(state){
+        obj[property] = state2;
+        state = 0;
+        return 1;
+      }else{
+        obj[property] = state1;
+        state = 1;
+        return 0;
+      }
+    };
   }
-}
+  /*可拖拽*/
+  /**
+   *drag
+   *@param {Element} dragObj 点击的对象
+   *@param {Element} moveObj 需要移动的对象
+   */
+  pub.drag = function(dragObj, moveObj){
+    if ( moveObj == 'noChildren' ){//noChildren 忽略子元素冒泡上来的拖拽事件
+      moveObj = undefined ;
+      var noChildren = true ;
+    }
+    moveObj = moveObj || dragObj ;
+    var startX
+      ,startY
+      ,stop ;
+    //注意此方法是以当前窗口为0px，也就是说如果页面有滚动的话，要加上scrollY值
+    moveObj.style.left = moveObj.style.left || moveObj.getBoundingClientRect().left + 'px' ;
+    moveObj.style.top =  moveObj.style.top || moveObj.getBoundingClientRect().top +'px' ;
+
+    dragObj.onmousedown = function(e){
+      //有的时候，dragObj是外层容器，点击其内部会冒泡到它,因此要验证点击的是否是dragObj
+      if( noChildren && e.target != dragObj ) { return ; }
+      startX = e.clientX - moveObj.style.left.split('px')[0] ;
+      startY = e.clientY - moveObj.style.top.split('px')[0] ;
+      var that = moveObj ;//that为要移动的对象；
+      /*注册拖拽事件*/
+      document.onselectstart = function(){ return false };
+      document.onmousemove = function(e){
+        that.style.left = e.clientX - startX + 'px' ;
+        that.style.top = e.clientY - startY + 'px' ;
+      } ;
+      /*注册清楚拖拽事件*/
+      var cbBackUp = document.onmouseup ;
+      document.onmouseup = function(e){
+        document.onselectstart = null;
+        document.onmousemove = null;
+        p.data.localSave();
+        /*self clean, avoid unnessary after Drag cleanup*/
+        document.onmouseup = cbBackUp ;
+      }
+    }
+  }
+  /*dragResize*/
+  /**
+   *@param {Element} adjustObj - 在左侧改变大小时需要修正左侧位置
+   */
+  pub.dragResize = function( dragObj, resizeObj ,resizeDirect, adjustObj){
+    var startX,
+      startY,
+      minWidth = 160,
+      minHeight = 50 ;
+
+    /*初次调用会写死其宽度和高度*/
+    resizeObj.style.width = resizeObj.style.width || resizeObj.getBoundingClientRect().width + 'px';
+    resizeObj.style.height = resizeObj.style.height || resizeObj.getBoundingClientRect().height + 'px';
+    if( adjustObj ){
+      adjustObj.style.left = adjustObj.style.left || adjustObj.getBoundingClientRect().left + 'px';
+    }
+
+    dragObj.onmousedown = function(e){
+      startX = e.clientX - resizeObj.style.width.split('px')[0];
+      startY = e.clientY - resizeObj.style.height.split('px')[0];
+      if( adjustObj ){
+        startLeft = e.clientX;
+        //startLeft = e.clientX - resizeObj.style.left.split('px')[0];
+      }
+
+      document.onselectstart = function(){ return false };
+      /*注册拖拽事件*/
+      document.onmousemove = function(e){
+        switch( resizeDirect ){
+          case 'height':
+            resizeObj.style.height =  e.clientY - startY  + 'px';
+            break;
+          case 'width':
+            resizeObj.style.width =  e.clientX - startX  + 'px';
+            break;
+          case 'leftWidth':
+          case 'leftWidthHeight':
+            var moveSpace = e.clientX - startLeft ;
+            /*宽度缩小移动的距离*/
+            resizeObj.style.width =  resizeObj.style.width.split('px')[0] - 0 - moveSpace  + 'px';
+            /*add! adjust left value for resizing by left side*/
+            adjustObj.style.left = adjustObj.style.left.split('px')[0] - 0 + moveSpace + 'px';
+            /*因为每次拖拽事件都要在现在的基础上加上移动距离，所以要更新原始点击的位置
+             *而其余的都是在原始的基础上加上最终移动的距离，所以不必更新原始点击的位置
+             */
+            startLeft = e.clientX ;
+
+            if( resizeDirect == 'leftWidthHeight' ){
+              resizeObj.style.height =  e.clientY - startY  + 'px';
+            }
+            break;
+          default:
+            resizeObj.style.width =  e.clientX - startX  + 'px';
+            resizeObj.style.height =  e.clientY - startY  + 'px';
+            break;
+        }
+      //startX = e.clientX - resizeObj.style.width.split('px')[0];
+      //startY = e.clientY - resizeObj.style.height.split('px')[0];
+      }
+      /*清除拖拽事件*/
+      var cbBackUp = document.onmouseup ;
+      document.onmouseup = function(e){
+        document.onselectstart = null;
+        document.onmousemove = null;
+        p.data.localSave();
+        /*self clean, avoid unnessary after Drag cleanup*/
+        document.onmouseup = cbBackUp ;
+      }
+    }
+  }
+
+  /***
+   *getTime()
+   *@return {String} 返回如下格式的字符串 '2013/2/22 16:14:55'
+   */
+  pub.getTime = function(){
+    var time = new Date();
+    return ( time.getYear()+ 1900 ) + '/' + (time.getMonth() + 1) + '/' + time.getDate()
+          + ' ' + time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds()
+  }
+
+  plugin.util = pub ;
+})(p);
+
+/****
+ *init build the plugin
+ */
+(function(plugin){
+  function init(){
+    var pContainer = document.createElement('div');
+    pContainer.id = '__plugin__';
+    pContainer.onselectstart = function(){ return false; }
+
+    pContainer.innerHTML =
+      '<div id="__body__" style="display:none">'+
+      '<div class="__bt__ __green__" id="highlight">高亮</div>'+
+      '<br><br><div class="__bt__ __green__" id="recover">恢复</div>' +
+      '<br><br><div class="__bt__ __green__" id="showMessage">清除</div>'+
+      '</div>'+
+      '<div id="__head__">'+
+      '<div id="__head-left__">'+
+      '<span class="actionbt" id="newNote">新建</span>'+
+      '<span class="actionbt" id="sendMessage">备份</span>'+
+      '<span class="actionbt" id="loadMessage">恢复</span>'+
+      '</div>'+
+      '<div id="__head-right__"></div>'+
+      '</div>';
+
+    document.body.appendChild( pContainer );
+
+    /**
+     *shadow
+     */
+    this.shadow = document.createElement('div');
+    this.shadow.id = '__shadow__';
+    document.body.appendChild( this.shadow );
+    /*点击时退出*/
+    plugin.shadow.onclick = plugin.note.exitEditMode ;
+
+    /**
+     *Toggle Max/Min Size
+     */
+    var pContainerId = '#' + pContainer.id;
+    $('#__head-right__').click(function(){
+      if( $(pContainerId).css('height') == '25px' ){
+        $( pContainerId ).css('height','400px')
+      $( pContainerId ).css('top', $(pContainerId).css('top').slice(0,-2) - 375 + 'px')
+      $('#__body__').show();
+      }else{
+        $(pContainerId).css('height','25px')
+      $( pContainerId ).css('top', $(pContainerId).css('top').slice(0,-2) - 0  + 375 + 'px')
+      $('#__body__').hide();
+      }
+    })
+
+    /**
+     *插入控制面板
+     */
+    //var f = document.createElement("iframe");
+    //f.id = "__plugin__"
+    //f.src = chrome.extension.getURL("interface.html");
+    //$('html').append(f);
+
+    p.util.drag( $('#__head-left__')[0] , pContainer );
+
+    p.attachEvents();
+  }
+
+  plugin.init = init ;
+})(p);
+
+
 
 var marked = {};
 
@@ -208,8 +290,6 @@ function highlight(range){
     //range.hlObject.insertAdjacentElement('afterEnd',span);
   }
 }
-
-
 
 /**
  *存储range，以便于恢复
@@ -258,16 +338,6 @@ function decodeLocation(rangeInfo){
   range.hlObject = rangeInfo.hlObject;
   return range ;
 }
-//点击恢复
-$('#recover').click(recover);
-function recover(){
-  if( localStorage.marked != null){
-    marked = JSON.parse(localStorage.marked);
-    handleMarked(marked);
-  }else{
-    alert('没有可以恢复的标记');
-  }
-}
 /**
  *解析range并高亮
  *@param {Object} marked 包含了各个range的对象集合
@@ -280,7 +350,7 @@ function handleMarked(items) {
 }
 
 /****
- *Save/Recover
+ *Data Save/Recover
  */
 (function(plugin){
   var pub = {} ;
@@ -316,54 +386,81 @@ function handleMarked(items) {
   plugin.data = pub ;
 })( p );
 
-//注册自动保存事件
-window.onunload = function(){
-  //for(var mem in marked){
-  //  break ;
-  //}
-  //if( marked[mem]=== undefined ){
-  //  return ;
-  //}
-  //localStorage.marked = JSON.stringify(marked);
-  //此处不用判断NOTE.i > 0 ，因为删除事件是在localSave()里面定义的，不然就无法删除最后一个元素了
-  p.data.localSave();
-}
+/**
+ *注册各种按钮的事件
+ */
+(function(plugin){
+  var pub = {};
+  pub.init = function(){
+    pub.menuRegist();
+    pub.eventRegist();
+    pub.highlightRegist();
+  }
 
-window.onresize = function(){
-  clearTimeout ( arguments.callee.tid );
-  arguments.callee.tid = setTimeout(function(){
-    //p.data.localSave();
-    p.note.init();
-  },20)
-}
+  pub.menuRegist = function(){
+    /*新建Note*/
+    $('#newNote').click(function(){
+      console.log('create!');
+      p.note.newItem();
+      p.note.dumpItem();
+    });
+    //点击恢复
+    $('#recover').click(recover);
+    function recover(){
+      if( localStorage.marked != null){
+        marked = JSON.parse(localStorage.marked);
+        handleMarked(marked);
+      }else{
+        alert('没有可以恢复的标记');
+      }
+    }
+    //注册发送事件
+    $('#sendMessage').click(function(){
+      p.data.remoteSave();
+    })
+    //注册接收事件
+    $('#loadMessage').click(function(){
+      p.data.remoteLoad();
+    });
+  }
+  /*注册一些全局事件*/
+  pub.eventRegist = function(){
+    //注册自动保存事件
+    window.onunload = function(){
+      p.data.localSave();
+    }
+    /*redraw NOTES location when window resized */
+    window.onresize = function(){
+      clearTimeout ( arguments.callee.tid );
+      arguments.callee.tid = setTimeout(function(){
+        p.note.init();
+      },20)
+    }
+  }
+  /*高亮功能相关事件注册*/
+  pub.highlightRegist = function(){
+    /***
+     *highlight related!
+     */
+    var hl = document.getElementById('highlight');
+    var range;
+    hl.onmouseover = function(){
+      range = prepareRange();
+    };
+    hl.onclick = function(){
+      addToMarked(range);
+      highlight(range);
+    };
+  }
 
-//注册发送事件
-$('#sendMessage').click(function(){
-  p.data.remoteSave();
-})
-//注册接收事件
-$('#loadMessage').click(function(){
-  p.data.remoteLoad();
-});
-
-
-//var titleClassical = new EditInPlaceField('titleClassical', document.body , 'Title Here');
-//var currentTitleText = titleClassical.getValue();
-
-$('#newNote').click(function(){
-  console.log('create!');
-  //new EditInPlaceField('null',document.body, new Date(), {top:window.scrollY,left:0});
-  p.note.newItem();
-  p.note.dumpItem();
-});
-
+  plugin.attachEvents = pub.init ;
+})(p);
 
 /****
  *Note Module
- *
  */
 (function(plugin){
-  /* note 所有标注的控制部分 */
+  /* Notes Control 所有标注的控制部分 */
   var note = {
     init: function(){
       this.reset(); //clear the DOM Elements of notes
@@ -384,7 +481,7 @@ $('#newNote').click(function(){
         s.className = '__input__';
         s.type = 'text';
         this.toolbar.appendChild(s);
-        this.toolbarChange = downselect( s,['#08c','#BD362F','#F89406','#1000CC','#000']);
+        this.toolbarChange = p.util.downselect( s,['#08c','#BD362F','#F89406','#1000CC','#000']);
       }
     },
     saveToolbar: function(){
@@ -403,7 +500,7 @@ $('#newNote').click(function(){
     },
     newItem: function(){
       this.notes[this.i] = new EditInPlaceField(this.i,
-          document.body, new Date(), {top:window.scrollY+'px',left:'0px'});
+          document.body, {position:{top:window.scrollY+'px',left:'0px'}});
       this.i ++ ;
     },
     removeItem: function(obj){
@@ -439,7 +536,7 @@ $('#newNote').click(function(){
     recoverItem: function(obj){
       for(var i = 0,l = obj.total; i < l ; i++ ){
         this.notes[i] = new EditInPlaceField( i,
-            document.body, obj[i].value, obj[i].position, obj[i].area, obj[i].appearance);
+            document.body, obj[i]); //.value, obj[i].position, obj[i].area, obj[i].appearance);
       }
       this.i = l ; //对应上面
     },
@@ -465,20 +562,24 @@ $('#newNote').click(function(){
   }
 
   /* EditInPlaceField class. 单个标注的实例*/
-  function EditInPlaceField(id, parent, value, position, area, appearance) {
+  function EditInPlaceField(id, parent, config){ //value, position, area, appearance) {
+    config = config || {} ;
     this.id = id; //保存的时候使用
-    this.value = value || 'default value';
+    this.title = config.title || plugin.util.getTime() ;
+    this.value = config.value || 'default value';
     this.parentElement = parent;
-    this.position = position || {top:'0px',left:'0px'} ;
-    this.area = area || { height:'60px'} ;
-    this.appearance = appearance ;
-    this.createElements(this.id);
+    this.position = config.position || {top:'0px',left:'0px'} ;
+    this.area = config.area || { height:'60px'} ;
+    this.appearance = config.appearance ;
+    this.initNote(this.id);
     //注册组件相关的各种事件
     this.attachEvents();
+    /*使大小可调整*/
+    this.makeResizeAble();
   };
 
   EditInPlaceField.prototype = {
-    createElements: function(id) {
+    initNote: function(id) {
       this.containerElement = document.createElement('div');
       this.containerElement.id = id;
       this.containerElement.className = '__note__';
@@ -490,9 +591,17 @@ $('#newNote').click(function(){
       }
       this.parentElement.appendChild(this.containerElement);
 
-      //this.staticElement = document.createElement('span');
-      //this.containerElement.appendChild(this.staticElement);
-      //this.staticElement.innerHTML = this.value;
+      /*title*/
+      this.titleElement = document.createElement( 'div' );
+      this.titleElement.className = '__note-title__';
+      this.titleElement.innerHTML = this.title ;
+      this.containerElement.appendChild(this.titleElement);
+
+      this.titleEditorElement = document.createElement('input');
+      this.titleEditorElement.type = 'text';
+      this.titleEditorElement.style.display = 'none' ;
+      this.titleEditorElement.className = '__note-title-editor__';
+      this.containerElement.appendChild( this.titleEditorElement );
       /*文本显示区域*/
       this.textElement = document.createElement('div');
       this.textElement.className = '__note-text__';
@@ -524,7 +633,7 @@ $('#newNote').click(function(){
       //this.convertToText();
     },
     attachEvents: function() {
-      drag( this.containerElement );
+      plugin.util.drag( this.titleElement, this.containerElement );
       var that = this;
       //this.staticElement.onclick = function() { that.convertToEditable() } ;
       this.saveButton.onclick = function() { that.save() } ;
@@ -535,6 +644,14 @@ $('#newNote').click(function(){
       this.closeButton.onmousedown = function() {
         p.note.saveToolbar();
         p.note.removeItem(that); } ;
+      /*标题编辑相关*/
+      this.titleElement.ondblclick = function(){
+        that.editTitle();
+      };
+      this.titleEditorElement.onblur = function(){
+        that.saveTitle();
+      };
+      /*正文编辑相关*/
       this.textElement.ondblclick = function(){
         p.note.enterEditMode();
         that.convertToEditable(); }
@@ -550,13 +667,52 @@ $('#newNote').click(function(){
       //  });
       //}
     },
+    makeResizeAble:function(){
+      /*水平的控制线*/
+      this.bottomControlElement = document.createElement('div');
+      this.bottomControlElement.className = '__note-bcontrol__';
+      this.containerElement.appendChild( this.bottomControlElement );
+      /*左侧控制线*/
+      this.leftControlElement = document.createElement('div');
+      this.leftControlElement.className = '__note-lcontrol__';
+      this.containerElement.appendChild( this.leftControlElement );
+      /*左下*/
+      this.lbControlElement = document.createElement('div');
+      this.lbControlElement.className = '__note-lbcontrol__';
+      this.containerElement.appendChild( this.lbControlElement );
+      /*右侧的控制线*/
+      this.rightControlElement = document.createElement('div');
+      this.rightControlElement.className = '__note-rcontrol__';
+      this.containerElement.appendChild( this.rightControlElement );
+      /*右下方控制*/
+      this.rbControlElement = document.createElement('div');
+      this.rbControlElement.className = '__note-rbcontrol__';
+      this.containerElement.appendChild( this.rbControlElement );
 
+      plugin.util.dragResize( this.bottomControlElement, this.textElement, 'height');
+      plugin.util.dragResize( this.leftControlElement, this.textElement, 'leftWidth', this.containerElement );
+      plugin.util.dragResize( this.lbControlElement, this.textElement, 'leftWidthHeight', this.containerElement );
+      plugin.util.dragResize( this.rightControlElement, this.textElement, 'width');
+      plugin.util.dragResize( this.rbControlElement, this.textElement);
+    },
     convertToEditable: function() {
       this.saveButton.style.display = 'inline';
       this.cancelButton.style.display = 'inline';
 
       this.editorElement.value = this.textElement.innerHTML ;
       this.editorElement.focus();
+    },
+    editTitle: function(){
+      this.titleEditorElement.value = this.titleElement.innerHTML ;
+      this.titleElement.style.display = 'none';
+      this.titleEditorElement.style.display = '';
+
+      this.titleEditorElement.focus();
+    },
+    saveTitle: function(){
+      this.titleElement.innerHTML = this.titleEditorElement.value ;
+      this.titleEditorElement.style.display = 'none';
+      this.titleElement.style.display = '';
     },
     save: function() {
       this.textElement.innerHTML = this.editorElement.value ;
@@ -575,7 +731,9 @@ $('#newNote').click(function(){
     },
     fetchConfig: function() {
       var obj = this.textElement ;
+      var title = this.titleElement.innerHTML ;
       return {
+        title: title,
         value: obj.innerHTML,
           position: {
             top: this.containerElement.style.top,
@@ -607,6 +765,7 @@ $('#newNote').click(function(){
   plugin.note = note ;
 })(p)
 
+p.init();
 p.note.init();
 
 /***
